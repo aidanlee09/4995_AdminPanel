@@ -29,7 +29,7 @@ export default function Home() {
     { label: "Top System Prompt", value: "Loading...", isLongText: true },
     { label: "Most Agreed Caption & Image", value: "Loading...", isLongText: true },
     { label: "Total Votes Cast This Past Week", value: "Loading..." },
-    { label: "Columbia University Student Analogy Selector Prompt Avg Likes", value: "Loading..." },
+    { label: "Average Likes of Columbia University Student Analogy Selector Prompt", value: "Loading..." },
   ]);
 
   useEffect(() => {
