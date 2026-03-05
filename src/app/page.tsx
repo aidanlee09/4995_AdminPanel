@@ -192,11 +192,13 @@ export default function Home() {
                 ) : index === 5 ? (
                   <div className={styles.centeredStat}>
                     <span className={styles.giantValue}>
-                      {stat.value.split(" ")[0]}
+                      {stat.value.split(" ")[0] || stat.value}
                     </span>
-                    <span className={styles.subLabel}>
-                      {stat.value.split(" ")[1]}
-                    </span>
+                    {stat.value.includes(" ") && (
+                      <span className={styles.subLabel}>
+                        {stat.value.split(" ")[1]}
+                      </span>
+                    )}
                   </div>
                 ) : (
                   <span className={`${styles.statValue} ${stat.isLongText ? styles.textSmall : ''}`}>
