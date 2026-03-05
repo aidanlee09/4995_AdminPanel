@@ -233,6 +233,7 @@ export async function getVotesPastThreeWeeks() {
     const threeWeeksAgo = new Date(now.getTime() - 21 * 24 * 60 * 60 * 1000);
 
     const fetchRange = async (start: Date, end: Date) => {
+      if (!supabase) return 0;
       const { count } = await supabase
         .from("caption_votes")
         .select("*", { count: "exact", head: true })
