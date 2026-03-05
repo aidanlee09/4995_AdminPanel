@@ -1,19 +1,7 @@
 .page {
-  --background: #fafafa;
-  --foreground: #fff;
-
-  --text-primary: #000;
-  --text-secondary: #666;
-
-  --button-primary-hover: #383838;
-  --button-secondary-hover: #f2f2f2;
-  --button-secondary-border: #ebebeb;
-
   display: flex;
   min-height: 100vh;
-  align-items: center;
   justify-content: center;
-  font-family: var(--font-geist-sans);
   background-color: var(--background);
 }
 
@@ -21,121 +9,181 @@
   display: flex;
   min-height: 100vh;
   width: 100%;
-  max-width: 800px;
+  max-width: 1400px;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
-  background-color: var(--foreground);
-  padding: 120px 60px;
+  justify-content: flex-start;
+  padding: 80px 40px;
+  gap: 64px;
 }
 
-.intro {
+.header {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
+  gap: 12px;
+}
+
+.header h1 {
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: #ffffff;
+  margin: 0;
+  background: linear-gradient(to right, #ffffff, #a0a0a0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.header p {
+  font-size: 18px;
+  color: #888888;
+  margin: 0;
+  max-width: 600px;
+  line-height: 1.6;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  width: 100%;
   gap: 24px;
 }
 
-.intro h1 {
-  max-width: 320px;
-  font-size: 40px;
+.statCard {
+  padding: 32px;
+  min-height: 200px;
+  border-radius: 24px;
+  background: rgba(20, 20, 20, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+.statCard:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(30, 30, 30, 0.8);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.statLabel {
+  font-size: 16px;
+  color: #aaaaaa;
   font-weight: 600;
-  line-height: 48px;
-  letter-spacing: -2.4px;
-  text-wrap: balance;
-  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
 }
 
-.intro p {
-  max-width: 440px;
-  font-size: 18px;
-  line-height: 32px;
-  text-wrap: balance;
-  color: var(--text-secondary);
-}
-
-.intro a {
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.ctas {
+.statContent {
   display: flex;
-  flex-direction: row;
-  width: 100%;
-  max-width: 440px;
-  gap: 16px;
-  font-size: 14px;
+  flex-direction: column;
+  gap: 20px;
+  flex-grow: 1;
 }
 
-.ctas a {
+.centeredStat {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 128px;
-  border: 1px solid transparent;
-  transition: 0.2s;
-  cursor: pointer;
-  width: fit-content;
-  font-weight: 500;
-}
-
-a.primary {
-  background: var(--text-primary);
-  color: var(--background);
+  justify-content: center;
+  flex-grow: 1;
   gap: 8px;
+  margin-top: -10px;
 }
 
-a.secondary {
-  border-color: var(--button-secondary-border);
+.giantValue {
+  font-size: 84px;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1;
+  background: linear-gradient(to bottom, #ffffff, #888888);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-/* Enable hover only on non-touch devices */
-@media (hover: hover) and (pointer: fine) {
-  a.primary:hover {
-    background: var(--button-primary-hover);
-    border-color: transparent;
-  }
-
-  a.secondary:hover {
-    background: var(--button-secondary-hover);
-    border-color: transparent;
-  }
+.subLabel {
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #aaaaaa;
 }
 
-@media (max-width: 600px) {
+.statValue {
+  font-size: 36px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+/* Specific styling for long text like prompts */
+.statValue.textSmall {
+  font-size: 24px;
+  font-weight: 700;
+  color: #f0f0f0;
+}
+
+.statImageContainer {
+  width: 100%;
+  height: 240px;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #111;
+  margin-top: 8px;
+}
+
+.statImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.statCard:hover .statImage {
+  transform: scale(1.05);
+}
+
+.statTrend {
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  width: fit-content;
+}
+
+.trendUp {
+  color: #4ade80; /* bright green */
+}
+
+.trendDown {
+  color: #f87171; /* bright red */
+}
+
+.trendNeutral {
+  color: #60a5fa; /* bright blue */
+}
+
+@media (max-width: 768px) {
   .main {
-    padding: 48px 24px;
+    padding: 40px 20px;
   }
-
-  .intro {
-    gap: 16px;
+  
+  .header h1 {
+    font-size: 36px;
   }
-
-  .intro h1 {
-    font-size: 32px;
-    line-height: 40px;
-    letter-spacing: -1.92px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .logo {
-    filter: invert();
-  }
-
-  .page {
-    --background: #000;
-    --foreground: #000;
-
-    --text-primary: #ededed;
-    --text-secondary: #999;
-
-    --button-primary-hover: #ccc;
-    --button-secondary-hover: #1a1a1a;
-    --button-secondary-border: #1a1a1a;
+  
+  .statsGrid {
+    grid-template-columns: 1fr;
   }
 }
