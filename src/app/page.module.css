@@ -84,6 +84,8 @@
   flex-direction: column;
   gap: 20px;
   flex-grow: 1;
+  align-items: center;
+  text-align: center;
 }
 
 .centeredStat {

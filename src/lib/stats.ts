@@ -63,43 +63,52 @@ export async function getTopSystemPrompt() {
 }
 
 /**
- * average ‘like_count’ of captions using the Columbia University student analogy selector llm user prompt.
+ * flavor with the highest average likes per caption
  */
-export async function getColumbiaAnalogyAverageLikes() {
+export async function getHighestRatedHumorFlavor() {
   if (!supabase) return "0 upvotes";
   try {
-    const { data: responses } = await supabase
-      .from("llm_model_responses")
-      .select("llm_prompt_chain_id")
-      .ilike("llm_user_prompt", "%Columbia University student analogy selector%");
+    const { data: captions } = await supabase
+      .from("captions")
+      .select("like_count, humor_flavor_id")
+      .not("humor_flavor_id", "is", null);
 
-    if (!responses || responses.length === 0) return "0 upvotes";
+    if (!captions || captions.length === 0) return "0 upvotes";
 
-    const chainIds = responses
-      .map(r => r.llm_prompt_chain_id)
-      .filter((id): id is string => !!id);
+    const flavorStats: Record<string, { total: number; count: number }> = {};
+    captions.forEach(c => {
+      const id = c.humor_flavor_id;
+      if (!flavorStats[id]) flavorStats[id] = { total: 0, count: 0 };
+      flavorStats[id].total += (c.like_count || 0);
+      flavorStats[id].count += 1;
+    });
 
-    return await calculateAverage(chainIds);
+    let bestFlavorId = null;
+    let bestAvg = -Infinity;
+
+    for (const id in flavorStats) {
+      const avg = flavorStats[id].total / flavorStats[id].count;
+      if (avg > bestAvg) {
+        bestAvg = avg;
+        bestFlavorId = id;
+      }
+    }
+
+    if (!bestFlavorId) return "0 upvotes";
+
+    const { data: flavor } = await supabase
+      .from("humor_flavors")
+      .select("slug")
+      .eq("id", bestFlavorId)
+      .single();
+
+    const absAvg = Math.abs(bestAvg).toFixed(1);
+    const suffix = bestAvg < 0 ? "downvotes" : "upvotes";
+    return `${flavor?.slug?.toUpperCase() || "UNKNOWN"}: ${absAvg} ${suffix}`;
   } catch (error) {
     console.error(error);
     return "Error";
   }
-}
-
-async function calculateAverage(chainIds: string[]) {
-  if (!supabase || chainIds.length === 0) return "0 upvotes";
-
-  const { data: captions } = await supabase
-    .from("captions")
-    .select("like_count")
-    .in("llm_prompt_chain_id", chainIds.slice(0, 100));
-
-  if (!captions || captions.length === 0) return "0 upvotes";
-
-  const totalLikes = captions.reduce((acc, curr) => acc + (curr.like_count || 0), 0);
-  const average = totalLikes / captions.length;
-  const absoluteAverage = Math.abs(average).toFixed(1);
-  return average < 0 ? `${absoluteAverage} downvotes` : `${absoluteAverage} upvotes`;
 }
 
 /**

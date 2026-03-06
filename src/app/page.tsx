@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase";
 import styles from "./page.module.css";
+import Link from "next/link";
 import { 
   getTopSystemPrompt, 
-  getColumbiaAnalogyAverageLikes, 
   getMostFavoredHumorFlavor, 
   getMostAgreedCaptionAndImage,
   getNewUsersLastThreeMonths,
-  getVotesPastThreeWeeks
+  getVotesPastThreeWeeks,
+  getHighestRatedHumorFlavor
 } from "@/lib/stats";
 
 interface Stat {
@@ -23,19 +26,20 @@ interface Stat {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [stats, setStats] = useState<Stat[]>([
     { label: "New Users (Past 3 Months)", value: "Loading...", trend: "Updating", up: true },
     { label: "Most Favored Humor Flavor", value: "Loading...", isLongText: true },
     { label: "Top System Prompt", value: "Loading...", isLongText: true },
     { label: "Most Agreed Caption & Image", value: "Loading...", isLongText: true },
     { label: "Total Votes Cast This Past Week", value: "Loading..." },
-    { label: "Average Likes of Columbia University Student Analogy Selector Prompt", value: "Loading..." },
+    { label: "Highest Rated Humor Style (Average Engagement)", value: "Loading..." },
   ]);
 
   useEffect(() => {
     async function loadStats() {
       const topPrompt = await getTopSystemPrompt();
-      const analogyAvg = await getColumbiaAnalogyAverageLikes();
+      const highestRatedFlavor = await getHighestRatedHumorFlavor();
       const mostFavored = await getMostFavoredHumorFlavor();
       const mostAgreedData = await getMostAgreedCaptionAndImage();
       const newUsers = await getNewUsersLastThreeMonths();
@@ -81,8 +85,8 @@ export default function Home() {
           chartData: [...votesData].reverse() // [week3, week2, current] for left-to-right chart
         };
 
-        // 5: Columbia University Student Analogy Selector Prompt Avg Likes
-        newStats[5] = { ...newStats[5], value: analogyAvg };
+        // 5: Highest Rated Humor Style
+        newStats[5] = { ...newStats[5], value: highestRatedFlavor };
         
         return newStats;
       });
@@ -154,20 +158,94 @@ export default function Home() {
     );
   };
 
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  };
+
   return (
     <div className={styles.page}>
-      <main className={styles.main}>
-        <div className={styles.header}>
-          <h1>Admin Panel</h1>
-          <p>
-            Real-time analytics and community performance metrics.
-          </p>
+      <main className={styles.main} style={{ gap: '0' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', marginBottom: '20px' }}>
+          <div className={styles.header} style={{ gap: '8px' }}>
+            <h1 style={{ margin: 0 }}>Admin Panel</h1>
+            <p style={{ margin: 0 }}>
+              Real-time analytics and community performance metrics.
+            </p>
+          </div>
+          <button 
+            onClick={handleSignOut}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '4px',
+              border: '1px solid #333',
+              backgroundColor: 'transparent',
+              color: '#888',
+              fontSize: '12px',
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+          >
+            SIGN OUT
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+          <Link href="/admin/users" style={{ 
+            padding: '6px 16px', 
+            textDecoration: 'none', 
+            backgroundColor: '#111', 
+            border: '1px solid #333', 
+            borderRadius: '4px',
+            color: '#fff',
+            fontSize: '11px',
+            fontWeight: 700,
+            letterSpacing: '0.05em',
+            transition: 'border-color 0.2s'
+          }}>
+            MANAGE USERS
+          </Link>
+          <Link href="/admin/images" style={{ 
+            padding: '6px 16px', 
+            textDecoration: 'none', 
+            backgroundColor: '#111', 
+            border: '1px solid #333', 
+            borderRadius: '4px',
+            color: '#fff',
+            fontSize: '11px',
+            fontWeight: 700,
+            letterSpacing: '0.05em'
+          }}>
+            MANAGE IMAGES
+          </Link>
+          <Link href="/admin/captions" style={{ 
+            padding: '6px 16px', 
+            textDecoration: 'none', 
+            backgroundColor: '#111', 
+            border: '1px solid #333', 
+            borderRadius: '4px',
+            color: '#fff',
+            fontSize: '11px',
+            fontWeight: 700,
+            letterSpacing: '0.05em'
+          }}>
+            VIEW CAPTIONS
+          </Link>
         </div>
 
         <div className={styles.statsGrid}>
           {stats.map((stat, index) => (
             <div key={index} className={styles.statCard}>
-              <div className={styles.statContent}>
+              <div 
+                className={styles.statContent} 
+                style={index === 4 ? { 
+                  alignItems: 'stretch', 
+                  textAlign: 'left',
+                  height: '100%'
+                } : {}}
+              >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <span className={styles.statLabel}>{stat.label}</span>
                   {stat.chartData && renderChart(stat.chartData)}
@@ -190,20 +268,26 @@ export default function Home() {
                     </span>
                   </>
                 ) : index === 5 ? (
-                  <div className={styles.centeredStat}>
-                    <span className={styles.giantValue}>
-                      {stat.value.split(" ")[0] || stat.value}
+                  <div className={styles.centeredStat} style={{ marginTop: '0', gap: '4px' }}>
+                    <span className={styles.statValue} style={{ fontSize: '28px', textAlign: 'center', width: '100%', color: '#ffffff' }}>
+                      {stat.value.split(":")[0]}
                     </span>
-                    {stat.value.includes(" ") && (
-                      <span className={styles.subLabel}>
-                        {stat.value.split(" ")[1]}
-                      </span>
-                    )}
+                    <span className={styles.statValue} style={{ fontSize: '24px', textAlign: 'center', width: '100%', color: '#aaaaaa' }}>
+                      {stat.value.split(":")[1]?.trim()}
+                    </span>
+                  </div>
+                ) : index === 4 ? (
+                  <div style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span className={styles.statValue} style={{ fontSize: '48px' }}>
+                      {stat.value}
+                    </span>
                   </div>
                 ) : (
-                  <span className={`${styles.statValue} ${stat.isLongText ? styles.textSmall : ''}`}>
-                    {stat.value}
-                  </span>
+                  <div style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span className={`${styles.statValue} ${stat.isLongText ? styles.textSmall : ''}`}>
+                      {stat.value}
+                    </span>
+                  </div>
                 )}
               </div>
               
