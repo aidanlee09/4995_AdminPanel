@@ -176,16 +176,24 @@
   color: #60a5fa; /* bright blue */
 }
 
-@media (max-width: 768px) {
-  .main {
-    padding: 40px 20px;
-  }
-  
-  .header h1 {
-    font-size: 36px;
-  }
-  
-  .statsGrid {
-    grid-template-columns: 1fr;
-  }
+.manageButton {
+  padding: 12px 24px;
+  text-decoration: none;
+  background-color: #111;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.manageButton:hover {
+  background-color: #4ade80 !important;
+  color: #000 !important;
+  border-color: #4ade80 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(74, 222, 128, 0.4);
 }

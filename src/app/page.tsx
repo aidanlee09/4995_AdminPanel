@@ -168,6 +168,29 @@ export default function Home() {
   return (
     <div className={styles.page}>
       <main className={styles.main} style={{ gap: '0' }}>
+        <style>{`
+          .manage-domain-btn {
+            padding: 14px 28px !important;
+            text-decoration: none !important;
+            background-color: #111 !important;
+            border: 1px solid #333 !important;
+            border-radius: 8px !important;
+            color: #fff !important;
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.1em !important;
+            transition: all 0.2s ease-in-out !important;
+            display: inline-block !important;
+            cursor: pointer !important;
+          }
+          .manage-domain-btn:hover {
+            background-color: #4ade80 !important;
+            color: #000 !important;
+            border-color: #4ade80 !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 20px rgba(74, 222, 128, 0.4) !important;
+          }
+        `}</style>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', marginBottom: '20px' }}>
           <div className={styles.header} style={{ gap: '8px' }}>
             <h1 style={{ margin: 0 }}>Admin Panel</h1>
@@ -192,46 +215,9 @@ export default function Home() {
           </button>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
-          <Link href="/admin/users" style={{ 
-            padding: '6px 16px', 
-            textDecoration: 'none', 
-            backgroundColor: '#111', 
-            border: '1px solid #333', 
-            borderRadius: '4px',
-            color: '#fff',
-            fontSize: '11px',
-            fontWeight: 700,
-            letterSpacing: '0.05em',
-            transition: 'border-color 0.2s'
-          }}>
-            MANAGE USERS
-          </Link>
-          <Link href="/admin/images" style={{ 
-            padding: '6px 16px', 
-            textDecoration: 'none', 
-            backgroundColor: '#111', 
-            border: '1px solid #333', 
-            borderRadius: '4px',
-            color: '#fff',
-            fontSize: '11px',
-            fontWeight: 700,
-            letterSpacing: '0.05em'
-          }}>
-            MANAGE IMAGES
-          </Link>
-          <Link href="/admin/captions" style={{ 
-            padding: '6px 16px', 
-            textDecoration: 'none', 
-            backgroundColor: '#111', 
-            border: '1px solid #333', 
-            borderRadius: '4px',
-            color: '#fff',
-            fontSize: '11px',
-            fontWeight: 700,
-            letterSpacing: '0.05em'
-          }}>
-            VIEW CAPTIONS
+        <div style={{ marginBottom: '32px' }}>
+          <Link href="/admin/users" className="manage-domain-btn">
+            MANAGE DOMAIN MODEL
           </Link>
         </div>
 
