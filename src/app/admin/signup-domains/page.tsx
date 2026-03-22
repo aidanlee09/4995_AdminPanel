@@ -11,42 +11,65 @@ interface SignupDomain {
 }
 
 export default function SignupDomainsPage() {
-  const [domains, setDomains] = useState<SignupDomain[]>([]);
+  const [domains, setDomains] = useState<AllowedDomain[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
-  const [editingDomain, setEditingDomain] = useState<SignupDomain | null>(null);
+  const [editingDomain, setEditingDomain] = useState<AllowedDomain | null>(null);
   const [newDomain, setNewDomain] = useState("");
-  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 20;
+
   const supabase = createClient();
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [currentPage]);
 
   async function fetchData() {
     setLoading(true);
-    const { data, error } = await supabase
+    const from = (currentPage - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error, count } = await supabase
       .from("allowed_signup_domains")
-      .select("*")
-      .order("apex_domain", { ascending: true });
+      .select("*", { count: "exact" })
+      .order("apex_domain", { ascending: true })
+      .range(from, to);
 
     if (error) {
-      console.error("Error fetching domains:", error);
+      console.error("Error fetching allowed_signup_domains:", error);
     } else {
       setDomains(data || []);
+      setTotalCount(count || 0);
     }
     setLoading(false);
   }
 
+  const totalPages = Math.ceil(totalCount / pageSize);
+
   async function handleSubmit() {
     if (!newDomain) return;
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      alert("You must be logged in to perform this action");
+      return;
+    }
+
     if (isAdding) {
-      const { error } = await supabase.from("allowed_signup_domains").insert([{ apex_domain: newDomain }]);
+      const { error } = await supabase.from("allowed_signup_domains").insert([{ 
+        apex_domain: newDomain,
+        created_by_user_id: user.id,
+        modified_by_user_id: user.id
+      }]);
       if (error) alert(error.message);
       else { setIsAdding(false); fetchData(); }
     } else if (editingDomain) {
-      const { error } = await supabase.from("allowed_signup_domains").update({ apex_domain: newDomain }).eq("id", editingDomain.id);
+      const { error } = await supabase.from("allowed_signup_domains").update({ 
+        apex_domain: newDomain,
+        modified_by_user_id: user.id
+      }).eq("id", editingDomain.id);
       if (error) alert(error.message);
       else { setEditingDomain(null); fetchData(); }
     }
@@ -147,6 +170,42 @@ export default function SignupDomainsPage() {
           </div>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '20px', padding: '10px' }}>
+          <button 
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            style={{ 
+              padding: '6px 12px', 
+              backgroundColor: currentPage === 1 ? '#111' : 'transparent', 
+              color: currentPage === 1 ? '#444' : '#4ade80', 
+              border: '1px solid #333', 
+              borderRadius: '4px', 
+              cursor: currentPage === 1 ? 'not-allowed' : 'pointer' 
+            }}
+          >
+            Previous
+          </button>
+          <span style={{ fontSize: '14px', color: '#888' }}>
+            Page {currentPage} of {totalPages} ({totalCount} total)
+          </span>
+          <button 
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            style={{ 
+              padding: '6px 12px', 
+              backgroundColor: currentPage === totalPages ? '#111' : 'transparent', 
+              color: currentPage === totalPages ? '#444' : '#4ade80', 
+              border: '1px solid #333', 
+              borderRadius: '4px', 
+              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' 
+            }}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }

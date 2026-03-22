@@ -29,33 +29,52 @@ export default function GenericAdminTable({
   const [editingItem, setEditingItem] = useState<any | null>(null);
   const [newItem, setNewItem] = useState<any>({});
   const [isAdding, setIsAdding] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 20;
   const supabase = createClient();
 
   useEffect(() => {
+    setCurrentPage(1);
+  }, [tableName]);
+
+  useEffect(() => {
     fetchData();
-  }, [tableName, orderBy, orderAscending]);
+  }, [tableName, orderBy, orderAscending, currentPage]);
+
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   async function fetchData() {
     setLoading(true);
-    let query = supabase.from(tableName).select("*");
+    const from = (currentPage - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    let query = supabase.from(tableName).select("*", { count: "exact" });
     
-    // Check if the order column exists before ordering
-    // We'll just try to order and if it fails, we'll try without ordering
-    const { data: result, error } = await query.order(orderBy, { ascending: orderAscending });
+    const { data: result, error, count } = await query
+      .order(orderBy, { ascending: orderAscending })
+      .range(from, to);
 
     if (error) {
       console.error(`Error fetching ${tableName}:`, error);
-      // Fallback: fetch without ordering
-      const { data: resultNoOrder, error: errorNoOrder } = await supabase.from(tableName).select("*");
+      // Fallback: fetch without ordering if it failed due to missing column
+      const { data: resultNoOrder, error: errorNoOrder, count: countNoOrder } = await supabase
+        .from(tableName)
+        .select("*", { count: "exact" })
+        .range(from, to);
+      
       if (errorNoOrder) {
         console.error(`Error fetching ${tableName} (no order):`, errorNoOrder);
         setData([]);
+        setTotalCount(0);
       } else {
         setData(resultNoOrder || []);
+        setTotalCount(countNoOrder || 0);
         updateColumns(resultNoOrder || []);
       }
     } else {
       setData(result || []);
+      setTotalCount(count || 0);
       updateColumns(result || []);
     }
     setLoading(false);
@@ -81,7 +100,17 @@ export default function GenericAdminTable({
   }
 
   async function handleAdd() {
-    const { error } = await supabase.from(tableName).insert([newItem]);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      alert("You must be logged in to perform this action");
+      return;
+    }
+
+    const { error } = await supabase.from(tableName).insert([{
+      ...newItem,
+      created_by_user_id: user.id,
+      modified_by_user_id: user.id
+    }]);
     if (error) {
       alert("Error adding: " + error.message);
     } else {
@@ -93,7 +122,13 @@ export default function GenericAdminTable({
 
   async function handleUpdate() {
     if (!editingItem) return;
-    const updateData = { ...newItem };
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      alert("You must be logged in to perform this action");
+      return;
+    }
+
+    const updateData = { ...newItem, modified_by_user_id: user.id };
     delete updateData[idColumn];
 
     const { error } = await supabase
@@ -232,6 +267,42 @@ export default function GenericAdminTable({
           </table>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '20px', padding: '10px' }}>
+          <button 
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            style={{ 
+              padding: '6px 12px', 
+              backgroundColor: currentPage === 1 ? '#111' : 'transparent', 
+              color: currentPage === 1 ? '#444' : '#4ade80', 
+              border: '1px solid #333', 
+              borderRadius: '4px', 
+              cursor: currentPage === 1 ? 'not-allowed' : 'pointer' 
+            }}
+          >
+            Previous
+          </button>
+          <span style={{ fontSize: '14px', color: '#888' }}>
+            Page {currentPage} of {totalPages} ({totalCount} total)
+          </span>
+          <button 
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            style={{ 
+              padding: '6px 12px', 
+              backgroundColor: currentPage === totalPages ? '#111' : 'transparent', 
+              color: currentPage === totalPages ? '#444' : '#4ade80', 
+              border: '1px solid #333', 
+              borderRadius: '4px', 
+              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' 
+            }}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }

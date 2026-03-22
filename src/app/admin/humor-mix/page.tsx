@@ -22,14 +22,19 @@ export default function HumorMixPage() {
   const [loading, setLoading] = useState(true);
   const [editingMix, setEditingMix] = useState<HumorFlavorMix | null>(null);
   const [newCaptionCount, setNewCaptionCount] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 20;
   const supabase = createClient();
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [currentPage]);
 
   async function fetchData() {
     setLoading(true);
+    const from = (currentPage - 1) * pageSize;
+    const to = from + pageSize - 1;
     
     // Fetch flavors for mapping IDs to slugs
     const { data: flavorData } = await supabase
@@ -43,25 +48,38 @@ export default function HumorMixPage() {
     }
 
     // Fetch the mix
-    const { data, error } = await supabase
+    const { data, error, count } = await supabase
       .from("humor_flavor_mix")
-      .select("*")
-      .order("created_datetime_utc", { ascending: false });
+      .select("*", { count: "exact" })
+      .order("created_datetime_utc", { ascending: false })
+      .range(from, to);
 
     if (error) {
       console.error("Error fetching humor mix:", error);
     } else {
       setMixes(data || []);
+      setTotalCount(count || 0);
     }
     setLoading(false);
   }
 
+  const totalPages = Math.ceil(totalCount / pageSize);
+
   async function handleUpdateMix() {
     if (!editingMix) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      alert("You must be logged in to perform this action");
+      return;
+    }
     
     const { error } = await supabase
       .from("humor_flavor_mix")
-      .update({ caption_count: newCaptionCount })
+      .update({ 
+        caption_count: newCaptionCount,
+        modified_by_user_id: user.id
+      })
       .eq("id", editingMix.id);
 
     if (error) {
@@ -153,6 +171,42 @@ export default function HumorMixPage() {
           </div>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '20px', padding: '10px' }}>
+          <button 
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            style={{ 
+              padding: '6px 12px', 
+              backgroundColor: currentPage === 1 ? '#111' : 'transparent', 
+              color: currentPage === 1 ? '#444' : '#4ade80', 
+              border: '1px solid #333', 
+              borderRadius: '4px', 
+              cursor: currentPage === 1 ? 'not-allowed' : 'pointer' 
+            }}
+          >
+            Previous
+          </button>
+          <span style={{ fontSize: '14px', color: '#888' }}>
+            Page {currentPage} of {totalPages} ({totalCount} total)
+          </span>
+          <button 
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            style={{ 
+              padding: '6px 12px', 
+              backgroundColor: currentPage === totalPages ? '#111' : 'transparent', 
+              color: currentPage === totalPages ? '#444' : '#4ade80', 
+              border: '1px solid #333', 
+              borderRadius: '4px', 
+              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' 
+            }}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }

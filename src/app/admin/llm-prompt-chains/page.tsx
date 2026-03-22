@@ -13,26 +13,36 @@ interface LLMPromptChain {
 export default function LLMPromptChainsPage() {
   const [chains, setChains] = useState<LLMPromptChain[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 20;
   const supabase = createClient();
 
   useEffect(() => {
-    async function fetchData() {
-      const { data, error } = await supabase
-        .from("llm_prompt_chains")
-        .select("*")
-        .order("created_datetime_utc", { ascending: false })
-        .limit(100);
-
-      if (error) {
-        console.error("Error fetching prompt chains:", error);
-      } else {
-        setChains(data || []);
-      }
-      setLoading(false);
-    }
-
     fetchData();
-  }, []);
+  }, [currentPage]);
+
+  async function fetchData() {
+    setLoading(true);
+    const from = (currentPage - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error, count } = await supabase
+      .from("llm_prompt_chains")
+      .select("*", { count: "exact" })
+      .order("created_datetime_utc", { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      console.error("Error fetching prompt chains:", error);
+    } else {
+      setChains(data || []);
+      setTotalCount(count || 0);
+    }
+    setLoading(false);
+  }
+
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
     <div>
@@ -69,6 +79,42 @@ export default function LLMPromptChainsPage() {
           </div>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '20px', padding: '10px' }}>
+          <button 
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            style={{ 
+              padding: '6px 12px', 
+              backgroundColor: currentPage === 1 ? '#111' : 'transparent', 
+              color: currentPage === 1 ? '#444' : '#4ade80', 
+              border: '1px solid #333', 
+              borderRadius: '4px', 
+              cursor: currentPage === 1 ? 'not-allowed' : 'pointer' 
+            }}
+          >
+            Previous
+          </button>
+          <span style={{ fontSize: '14px', color: '#888' }}>
+            Page {currentPage} of {totalPages} ({totalCount} total)
+          </span>
+          <button 
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            style={{ 
+              padding: '6px 12px', 
+              backgroundColor: currentPage === totalPages ? '#111' : 'transparent', 
+              color: currentPage === totalPages ? '#444' : '#4ade80', 
+              border: '1px solid #333', 
+              borderRadius: '4px', 
+              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' 
+            }}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -18,27 +18,37 @@ export default function ImagesPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 21;
   
   const supabase = createClient();
 
   useEffect(() => {
     fetchImages();
-  }, []);
+  }, [currentPage]);
 
   async function fetchImages() {
     setLoading(true);
-    const { data, error } = await supabase
+    const from = (currentPage - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error, count } = await supabase
       .from("images")
-      .select("*")
-      .order("created_datetime_utc", { ascending: false });
+      .select("*", { count: "exact" })
+      .order("created_datetime_utc", { ascending: false })
+      .range(from, to);
 
     if (error) {
       console.error("Error fetching images:", error);
     } else {
       setImages(data || []);
+      setTotalCount(count || 0);
     }
     setLoading(false);
   }
+
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -65,10 +75,21 @@ export default function ImagesPage() {
       .from('images')
       .getPublicUrl(filePath);
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      alert("You must be logged in to perform this action");
+      setUploading(false);
+      return;
+    }
+
     // Insert into 'images' table
     const { error: insertError } = await supabase
       .from("images")
-      .insert([{ url: publicUrl }]);
+      .insert([{ 
+        url: publicUrl,
+        created_by_user_id: user.id,
+        modified_by_user_id: user.id
+      }]);
 
     if (insertError) {
       alert("Error saving image record: " + insertError.message);
@@ -80,9 +101,20 @@ export default function ImagesPage() {
 
   async function handleAddImage() {
     if (!newUrl) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      alert("You must be logged in to perform this action");
+      return;
+    }
+
     const { error } = await supabase
       .from("images")
-      .insert([{ url: newUrl }]);
+      .insert([{ 
+        url: newUrl,
+        created_by_user_id: user.id,
+        modified_by_user_id: user.id
+      }]);
 
     if (error) {
       alert("Error adding image: " + error.message);
@@ -95,9 +127,19 @@ export default function ImagesPage() {
 
   async function handleUpdateImage() {
     if (!editingImage || !newUrl) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      alert("You must be logged in to perform this action");
+      return;
+    }
+
     const { error } = await supabase
       .from("images")
-      .update({ url: newUrl })
+      .update({ 
+        url: newUrl,
+        modified_by_user_id: user.id
+      })
       .eq("id", editingImage.id);
 
     if (error) {
@@ -223,6 +265,42 @@ export default function ImagesPage() {
           </div>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '20px', padding: '10px' }}>
+          <button 
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            style={{ 
+              padding: '6px 12px', 
+              backgroundColor: currentPage === 1 ? '#111' : 'transparent', 
+              color: currentPage === 1 ? '#444' : '#4ade80', 
+              border: '1px solid #333', 
+              borderRadius: '4px', 
+              cursor: currentPage === 1 ? 'not-allowed' : 'pointer' 
+            }}
+          >
+            Previous
+          </button>
+          <span style={{ fontSize: '14px', color: '#888' }}>
+            Page {currentPage} of {totalPages} ({totalCount} total)
+          </span>
+          <button 
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            style={{ 
+              padding: '6px 12px', 
+              backgroundColor: currentPage === totalPages ? '#111' : 'transparent', 
+              color: currentPage === totalPages ? '#444' : '#4ade80', 
+              border: '1px solid #333', 
+              borderRadius: '4px', 
+              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' 
+            }}
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {selectedImage && (
         <div 
