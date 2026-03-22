@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import styles from "../../page.module.css";
 
-interface SignupDomain {
+interface AllowedDomain {
   id: string;
   apex_domain: string;
   created_datetime_utc?: string;
