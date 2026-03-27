@@ -45,20 +45,42 @@ export async function getTopSystemPrompt() {
       targetChainId = chainData?.id || null;
     }
 
-    if (!targetChainId) return "No Data";
+    // Try to get the system prompt for the target chain
+    if (targetChainId) {
+      const { data: responseData } = await supabase
+        .from("llm_model_responses")
+        .select("llm_system_prompt")
+        .eq("llm_prompt_chain_id", targetChainId)
+        .not("llm_system_prompt", "is", null)
+        .not("llm_system_prompt", "ilike", "n/a")
+        .limit(1)
+        .single();
 
-    const { data: responseData, error: responseError } = await supabase
+      const prompt = responseData?.llm_system_prompt?.trim();
+      if (prompt && prompt.toUpperCase() !== "N/A" && prompt.length > 0) {
+        return prompt;
+      }
+    }
+
+    // Fallback: Get the absolute latest system prompt available in the system
+    const { data: fallbackData } = await supabase
       .from("llm_model_responses")
       .select("llm_system_prompt")
-      .eq("llm_prompt_chain_id", targetChainId)
+      .not("llm_system_prompt", "is", null)
+      .not("llm_system_prompt", "ilike", "n/a")
+      .order("created_datetime_utc", { ascending: false })
       .limit(1)
       .single();
 
-    if (responseError || !responseData) return "N/A";
-    return responseData.llm_system_prompt || "N/A";
+    const fallbackPrompt = fallbackData?.llm_system_prompt?.trim();
+    if (fallbackPrompt && fallbackPrompt.toUpperCase() !== "N/A" && fallbackPrompt.length > 0) {
+      return fallbackPrompt;
+    }
+
+    return "No valid system prompts found in database.";
   } catch (error) {
     console.error(error);
-    return "Error";
+    return "Error: Could not retrieve system prompt.";
   }
 }
 
@@ -115,7 +137,7 @@ export async function getHighestRatedHumorFlavor() {
  * most favored humor flavor
  */
 export async function getMostFavoredHumorFlavor() {
-  if (!supabase) return "N/A";
+  if (!supabase) return "No Data";
   try {
     const { data: captionData } = await supabase
       .from("captions")
@@ -126,19 +148,33 @@ export async function getMostFavoredHumorFlavor() {
       .limit(1)
       .single();
 
-    if (!captionData) return "No favored flavor";
+    if (captionData) {
+      const { data: flavorData } = await supabase
+        .from("humor_flavors")
+        .select("slug, description")
+        .eq("id", captionData.humor_flavor_id)
+        .single();
 
-    const { data: flavorData } = await supabase
+      if (flavorData) {
+        return `${flavorData.slug} - ${flavorData.description}`;
+      }
+    }
+
+    // Fallback: Get the latest flavor if no favored one exists
+    const { data: latestFlavor } = await supabase
       .from("humor_flavors")
       .select("slug, description")
-      .eq("id", captionData.humor_flavor_id)
+      .limit(1)
       .single();
 
-    if (!flavorData) return "N/A";
-    return `${flavorData.slug} - ${flavorData.description}`;
+    if (latestFlavor) {
+      return `${latestFlavor.slug} - ${latestFlavor.description}`;
+    }
+
+    return "No flavors found";
   } catch (error) {
     console.error(error);
-    return "Error";
+    return "Error fetching flavor";
   }
 }
 
@@ -259,5 +295,91 @@ export async function getVotesPastThreeWeeks() {
   } catch (error) {
     console.error(error);
     return [0, 0, 0];
+  }
+}
+
+/**
+ * High impact creations: captions with positive engagement vs total
+ */
+export async function getHighImpactCreations() {
+  if (!supabase) return "0 / 0";
+  try {
+    const { count: total } = await supabase
+      .from("captions")
+      .select("*", { count: "exact", head: true });
+    
+    const { count: positive } = await supabase
+      .from("captions")
+      .select("*", { count: "exact", head: true })
+      .gt("like_count", 0);
+    
+    return `${positive?.toLocaleString()} / ${total?.toLocaleString()} captions`;
+  } catch (error) {
+    console.error(error);
+    return "Error";
+  }
+}
+
+/**
+ * Model with the highest percentage of positively rated captions
+ */
+export async function getTopPerformingModel() {
+  if (!supabase) return "None";
+  try {
+    // Get all captions with their chain IDs and like counts
+    const { data: captions } = await supabase
+      .from("captions")
+      .select("llm_prompt_chain_id, like_count")
+      .not("llm_prompt_chain_id", "is", null);
+
+    if (!captions || captions.length === 0) return "None";
+
+    // Get all model responses to map chain ID to model ID
+    const { data: responses } = await supabase
+      .from("llm_model_responses")
+      .select("llm_prompt_chain_id, llm_model_id")
+      .not("llm_prompt_chain_id", "is", null);
+
+    if (!responses || responses.length === 0) return "None";
+
+    const chainToModel: Record<string, string> = {};
+    responses.forEach(r => {
+      chainToModel[r.llm_prompt_chain_id] = r.llm_model_id;
+    });
+
+    const modelStats: Record<string, { positive: number; total: number }> = {};
+    captions.forEach(c => {
+      const modelId = chainToModel[c.llm_prompt_chain_id];
+      if (!modelId) return;
+      if (!modelStats[modelId]) modelStats[modelId] = { positive: 0, total: 0 };
+      modelStats[modelId].total++;
+      if ((c.like_count || 0) > 0) {
+        modelStats[modelId].positive++;
+      }
+    });
+
+    let bestModelId = "";
+    let bestRate = -1;
+
+    for (const id in modelStats) {
+      const rate = modelStats[id].positive / modelStats[id].total;
+      if (rate > bestRate) {
+        bestRate = rate;
+        bestModelId = id;
+      }
+    }
+
+    if (!bestModelId) return "None";
+
+    const { data: modelData } = await supabase
+      .from("llm_models")
+      .select("name")
+      .eq("id", bestModelId)
+      .single();
+
+    return `${modelData?.name || bestModelId} (${(bestRate * 100).toFixed(1)}% Success)`;
+  } catch (error) {
+    console.error(error);
+    return "Error";
   }
 }

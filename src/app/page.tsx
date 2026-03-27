@@ -6,12 +6,12 @@ import { createClient } from "@/lib/supabase";
 import styles from "./page.module.css";
 import Link from "next/link";
 import { 
-  getTopSystemPrompt, 
   getMostFavoredHumorFlavor, 
   getMostAgreedCaptionAndImage,
   getNewUsersLastThreeMonths,
   getVotesPastThreeWeeks,
-  getHighestRatedHumorFlavor
+  getHighImpactCreations,
+  getTopPerformingModel
 } from "@/lib/stats";
 
 interface Stat {
@@ -30,16 +30,16 @@ export default function Home() {
   const [stats, setStats] = useState<Stat[]>([
     { label: "New Users (Past 3 Months)", value: "Loading...", trend: "Updating", up: true },
     { label: "Most Favored Humor Flavor", value: "Loading...", isLongText: true },
-    { label: "Top System Prompt", value: "Loading...", isLongText: true },
+    { label: "Community-Approved Gems", value: "Loading..." },
     { label: "Most Agreed Caption & Image", value: "Loading...", isLongText: true },
     { label: "Total Votes Cast This Past Week", value: "Loading..." },
-    { label: "Highest Rated Humor Style (Average Engagement)", value: "Loading..." },
+    { label: "Most Humorous AI Model", value: "Loading..." },
   ]);
 
   useEffect(() => {
     async function loadStats() {
-      const topPrompt = await getTopSystemPrompt();
-      const highestRatedFlavor = await getHighestRatedHumorFlavor();
+      const highImpact = await getHighImpactCreations();
+      const topModel = await getTopPerformingModel();
       const mostFavored = await getMostFavoredHumorFlavor();
       const mostAgreedData = await getMostAgreedCaptionAndImage();
       const newUsers = await getNewUsersLastThreeMonths();
@@ -48,10 +48,6 @@ export default function Home() {
       const currentVotes = votesData[0];
       const prevWeeksAvg = (votesData[1] + votesData[2]) / 2;
       const votesDiff = prevWeeksAvg === 0 ? (currentVotes > 0 ? 100 : 0) : Math.round(((currentVotes - prevWeeksAvg) / prevWeeksAvg) * 100);
-
-      // Extract the first sentence
-      const sentenceMatch = topPrompt.match(/^.*?[.!?](\s|$)/);
-      const firstSentence = sentenceMatch ? sentenceMatch[0].trim() : topPrompt;
 
       setStats(prev => {
         const newStats = [...prev];
@@ -62,8 +58,8 @@ export default function Home() {
         // 1: Most Favored Humor Flavor
         newStats[1] = { ...newStats[1], value: mostFavored };
         
-        // 2: Top System Prompt
-        newStats[2] = { ...newStats[2], value: firstSentence };
+        // 2: Community-Approved Gems
+        newStats[2] = { ...newStats[2], value: highImpact };
         
         // 3: Most Agreed Caption & Image
         if (mostAgreedData) {
@@ -85,8 +81,8 @@ export default function Home() {
           chartData: [...votesData].reverse() // [week3, week2, current] for left-to-right chart
         };
 
-        // 5: Highest Rated Humor Style
-        newStats[5] = { ...newStats[5], value: highestRatedFlavor };
+        // 5: Most Humorous AI Model
+        newStats[5] = { ...newStats[5], value: topModel };
         
         return newStats;
       });
