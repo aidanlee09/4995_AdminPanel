@@ -186,26 +186,38 @@ export default function Home() {
             transform: translateY(-2px) !important;
             box-shadow: 0 4px 20px rgba(74, 222, 128, 0.4) !important;
           }
+          .sign-out-btn {
+            padding: 8px 16px !important;
+            border-radius: 4px !important;
+            border: 1px solid #333 !important;
+            background-color: transparent !important;
+            color: #888 !important;
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease-in-out !important;
+            text-transform: uppercase !important;
+          }
+          .sign-out-btn:hover {
+            background-color: #f87171 !important;
+            color: #000 !important;
+            border-color: #f87171 !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 20px rgba(248, 113, 113, 0.4) !important;
+          }
         `}</style>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', marginBottom: '20px' }}>
           <div className={styles.header} style={{ gap: '8px' }}>
-            <h1 style={{ margin: 0 }}>Admin Panel</h1>
+            <Link href="/" style={{ textDecoration: 'none' }}>
+              <h1 style={{ margin: 0 }}>Admin Panel</h1>
+            </Link>
             <p style={{ margin: 0 }}>
               Real-time analytics and community performance metrics.
             </p>
           </div>
           <button 
             onClick={handleSignOut}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '4px',
-              border: '1px solid #333',
-              backgroundColor: 'transparent',
-              color: '#888',
-              fontSize: '12px',
-              fontWeight: 700,
-              cursor: 'pointer'
-            }}
+            className="sign-out-btn"
           >
             SIGN OUT
           </button>

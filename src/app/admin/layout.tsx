@@ -45,9 +45,20 @@ export default function AdminLayout({
         height: '100vh',
         overflowY: 'auto'
       }}>
-        <div style={{ marginBottom: '20px', fontWeight: 'bold', fontSize: '18px', letterSpacing: '0.1em' }}>
+        <Link 
+          href="/" 
+          style={{ 
+            marginBottom: '20px', 
+            fontWeight: 'bold', 
+            fontSize: '18px', 
+            letterSpacing: '0.1em', 
+            textDecoration: 'none', 
+            color: '#fff',
+            display: 'block'
+          }}
+        >
           ADMIN PANEL
-        </div>
+        </Link>
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {menuItems.map((item) => (
             <Link 

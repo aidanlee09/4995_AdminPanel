@@ -9,11 +9,15 @@ interface CaptionRequest {
   created_datetime_utc: string;
   profile_id: string;
   image_id: string;
+  images: {
+    url: string;
+  } | null;
 }
 
 export default function CaptionRequestsPage() {
   const [requests, setRequests] = useState<CaptionRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 20;
@@ -30,14 +34,19 @@ export default function CaptionRequestsPage() {
 
     const { data, error, count } = await supabase
       .from("caption_requests")
-      .select("*", { count: "exact" })
+      .select(`
+        *,
+        images (
+          url
+        )
+      `, { count: "exact" })
       .order("created_datetime_utc", { ascending: false })
       .range(from, to);
 
     if (error) {
       console.error("Error fetching requests:", error);
     } else {
-      setRequests(data || []);
+      setRequests(data as any || []);
       setTotalCount(count || 0);
     }
     setLoading(false);
@@ -66,6 +75,7 @@ export default function CaptionRequestsPage() {
                   <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>CREATED (UTC)</th>
                   <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>USER ID</th>
                   <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>IMAGE ID</th>
+                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>IMAGE</th>
                 </tr>
               </thead>
               <tbody>
@@ -77,6 +87,20 @@ export default function CaptionRequestsPage() {
                     </td>
                     <td style={{ padding: '12px', fontSize: '11px', color: '#888', fontFamily: 'monospace' }}>{req.profile_id}</td>
                     <td style={{ padding: '12px', fontSize: '11px', color: '#888', fontFamily: 'monospace' }}>{req.image_id}</td>
+                    <td style={{ padding: '12px' }}>
+                      {req.images?.url ? (
+                        <div 
+                          onClick={() => setSelectedImage(req.images!.url)}
+                          style={{ width: '50px', height: '50px', borderRadius: '4px', overflow: 'hidden', cursor: 'zoom-in', border: '1px solid #333' }}
+                        >
+                          <img src={req.images.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                      ) : (
+                        <div style={{ width: '50px', height: '50px', borderRadius: '4px', backgroundColor: '#111', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: '#444' }}>
+                          N/A
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -118,6 +142,38 @@ export default function CaptionRequestsPage() {
           >
             Next
           </button>
+        </div>
+      )}
+
+      {selectedImage && (
+        <div 
+          onClick={() => setSelectedImage(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            cursor: 'zoom-out'
+          }}
+        >
+          <img 
+            src={selectedImage} 
+            alt="Zoomed view" 
+            style={{ 
+              maxWidth: '90%', 
+              maxHeight: '90%', 
+              objectFit: 'contain',
+              borderRadius: '8px',
+              boxShadow: '0 0 40px rgba(0,0,0,0.5)'
+            }} 
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>

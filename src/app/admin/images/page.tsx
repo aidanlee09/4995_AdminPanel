@@ -167,6 +167,25 @@ export default function ImagesPage() {
 
   return (
     <div>
+      <style>{`
+        .responsive-image-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 32px;
+        }
+        @media (max-width: 1024px) {
+          .responsive-image-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+          }
+        }
+        @media (max-width: 640px) {
+          .responsive-image-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+          }
+        }
+      `}</style>
       <div className={styles.header} style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 style={{ margin: 0 }}>Images</h1>
@@ -183,7 +202,7 @@ export default function ImagesPage() {
             cursor: uploading ? 'wait' : 'pointer',
             fontSize: '14px'
           }}>
-            {uploading ? "Uploading..." : "Upload File"}
+            {uploading ? "Uploading..." : "Upload Image"}
             <input 
               type="file" 
               accept="image/*" 
@@ -234,27 +253,27 @@ export default function ImagesPage() {
         {loading ? (
           <p>Loading images...</p>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+          <div className="responsive-image-grid">
             {images.map((image) => (
-              <div key={image.id} style={{ border: '1px solid #222', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#0a0a0a' }}>
+              <div key={image.id} style={{ border: '1px solid #222', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
                 <div 
                   onClick={() => setSelectedImage(image.url)} 
-                  style={{ cursor: 'zoom-in', height: '150px', overflow: 'hidden' }}
+                  style={{ cursor: 'zoom-in', aspectRatio: '1 / 1', width: '100%', overflow: 'hidden' }}
                 >
                   <img src={image.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }} />
                 </div>
-                <div style={{ padding: '12px' }}>
-                  <p style={{ fontSize: '10px', color: '#555', wordBreak: 'break-all', marginBottom: '10px', height: '24px', overflow: 'hidden' }}>{image.url}</p>
-                  <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ padding: '16px', flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <p style={{ fontSize: '11px', color: '#555', wordBreak: 'break-all', marginBottom: '16px', height: '32px', overflow: 'hidden' }}>{image.url}</p>
+                  <div style={{ display: 'flex', gap: '12px' }}>
                     <button 
                       onClick={() => { setEditingImage(image); setNewUrl(image.url); setIsAdding(false); }}
-                      style={{ flex: 1, padding: '6px', backgroundColor: 'transparent', border: '1px solid #333', color: '#888', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}
+                      style={{ flex: 1, padding: '10px', backgroundColor: 'transparent', border: '1px solid #333', color: '#888', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
                     >
                       Edit
                     </button>
                     <button 
                       onClick={() => handleDeleteImage(image.id)}
-                      style={{ flex: 1, padding: '6px', backgroundColor: 'transparent', border: '1px solid #333', color: '#ef4444', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}
+                      style={{ flex: 1, padding: '10px', backgroundColor: 'transparent', border: '1px solid #333', color: '#ef4444', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
                     >
                       Delete
                     </button>
