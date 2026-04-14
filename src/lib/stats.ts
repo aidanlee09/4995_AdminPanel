@@ -383,3 +383,124 @@ export async function getTopPerformingModel() {
     return "Error";
   }
 }
+
+/**
+ * Get the most recently rated captions
+ */
+export async function getRecentlyRatedCaptions() {
+  if (!supabase) return [];
+  try {
+    const { data: recentVotes } = await supabase
+      .from("caption_votes")
+      .select("caption_id, created_datetime_utc")
+      .order("created_datetime_utc", { ascending: false })
+      .limit(20);
+
+    if (!recentVotes || recentVotes.length === 0) return [];
+
+    const uniqueCaptionIds = Array.from(new Set(recentVotes.map(v => v.caption_id))).slice(0, 3);
+    
+    const { data: captions } = await supabase
+      .from("captions")
+      .select("id, content")
+      .in("id", uniqueCaptionIds);
+
+    if (!captions) return [];
+
+    // Maintain order from uniqueCaptionIds
+    return uniqueCaptionIds
+      .map(id => captions.find((c: any) => c.id === id)?.content)
+      .filter(Boolean);
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+/**
+ * Get the caption with the most votes in the last 7 days
+ */
+export async function getTrendingCaption() {
+  if (!supabase) return null;
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const { data: recentVotes } = await supabase
+      .from("caption_votes")
+      .select("caption_id")
+      .gte("created_datetime_utc", sevenDaysAgo.toISOString());
+
+    if (!recentVotes || recentVotes.length === 0) return null;
+
+    const voteCounts: Record<string, number> = {};
+    recentVotes.forEach(v => {
+      voteCounts[v.caption_id] = (voteCounts[v.caption_id] || 0) + 1;
+    });
+
+    let trendingId = null;
+    let maxVotes = 0;
+    for (const id in voteCounts) {
+      if (voteCounts[id] > maxVotes) {
+        maxVotes = voteCounts[id];
+        trendingId = id;
+      }
+    }
+
+    if (!trendingId) return null;
+
+    const { data: caption } = await supabase
+      .from("captions")
+      .select("content")
+      .eq("id", trendingId)
+      .single();
+
+    return {
+      content: caption?.content || "Unknown",
+      count: maxVotes
+    };
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+/**
+ * Get total votes in the last 24 hours
+ */
+export async function getVotesLast24Hours() {
+  if (!supabase) return 0;
+  try {
+    const twentyFourHoursAgo = new Date();
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+    const { count } = await supabase
+      .from("caption_votes")
+      .select("*", { count: "exact", head: true })
+      .gte("created_datetime_utc", twentyFourHoursAgo.toISOString());
+
+    return count || 0;
+  } catch (error) {
+    console.error(error);
+    return 0;
+  }
+}
+
+/**
+ * Get top 3 most liked captions of all time
+ */
+export async function getTop3Captions() {
+  if (!supabase) return [];
+  try {
+    const { data } = await supabase
+      .from("captions")
+      .select("content, like_count")
+      .order("like_count", { ascending: false })
+      .limit(3);
+
+    return data || [];
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}

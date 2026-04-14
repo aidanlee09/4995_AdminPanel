@@ -11,7 +11,11 @@ import {
   getNewUsersLastThreeMonths,
   getVotesPastThreeWeeks,
   getHighImpactCreations,
-  getTopPerformingModel
+  getTopPerformingModel,
+  getRecentlyRatedCaptions,
+  getTrendingCaption,
+  getVotesLast24Hours,
+  getTop3Captions
 } from "@/lib/stats";
 
 interface Stat {
@@ -22,17 +26,22 @@ interface Stat {
   neutral?: boolean;
   imageUrl?: string;
   isLongText?: boolean;
+  isList?: boolean;
   chartData?: number[];
 }
 
 export default function Home() {
   const router = useRouter();
   const [stats, setStats] = useState<Stat[]>([
+    { label: "Top Rated All-Time", value: "Loading...", isLongText: true, isList: true },
+    { label: "Captions Users Are Rating", value: "Loading...", isLongText: true, isList: true },
+    { label: "24H Voting Surge", value: "Loading...", trend: "Past 24 hours" },
+    { label: "Trending Caption Now", value: "Loading...", isLongText: true },
+    { label: "Community-Approved Gems", value: "Loading..." },
+    { label: "Total Votes Cast This Past Week", value: "Loading..." },
+    { label: "Most Agreed Caption & Image", value: "Loading...", isLongText: true },
     { label: "New Users (Past 3 Months)", value: "Loading...", trend: "Updating", up: true },
     { label: "Most Favored Humor Flavor", value: "Loading...", isLongText: true },
-    { label: "Community-Approved Gems", value: "Loading..." },
-    { label: "Most Agreed Caption & Image", value: "Loading...", isLongText: true },
-    { label: "Total Votes Cast This Past Week", value: "Loading..." },
     { label: "Most Humorous AI Model", value: "Loading..." },
   ]);
 
@@ -44,6 +53,10 @@ export default function Home() {
       const mostAgreedData = await getMostAgreedCaptionAndImage();
       const newUsers = await getNewUsersLastThreeMonths();
       const votesData = await getVotesPastThreeWeeks(); // [current, week2, week3]
+      const recentCaptions = await getRecentlyRatedCaptions();
+      const trending = await getTrendingCaption();
+      const votes24h = await getVotesLast24Hours();
+      const top3 = await getTop3Captions();
       
       const currentVotes = votesData[0];
       const prevWeeksAvg = (votesData[1] + votesData[2]) / 2;
@@ -52,37 +65,68 @@ export default function Home() {
       setStats(prev => {
         const newStats = [...prev];
         
-        // 0: New Users (Past 3 Months)
-        newStats[0] = { ...newStats[0], value: newUsers, trend: "Community Growth", up: true };
-        
-        // 1: Most Favored Humor Flavor
-        newStats[1] = { ...newStats[1], value: mostFavored };
-        
-        // 2: Community-Approved Gems
-        newStats[2] = { ...newStats[2], value: highImpact };
-        
-        // 3: Most Agreed Caption & Image
-        if (mostAgreedData) {
-          newStats[3] = { 
-            ...newStats[3], 
-            value: mostAgreedData.caption, 
-            imageUrl: mostAgreedData.imageUrl || undefined 
-          };
-        } else {
-          newStats[3] = { ...newStats[3], value: "No data available" };
-        }
+        // 0: Top Rated All-Time
+        newStats[0] = { 
+          ...newStats[0], 
+          value: top3.length > 0 ? top3.map(c => `${c.content} (${c.like_count} likes)`).join("\n") : "No ratings yet"
+        };
 
-        // 4: Total Votes Cast This Past Week
-        newStats[4] = { 
-          ...newStats[4], 
+        // 1: Captions Users Are Rating
+        newStats[1] = { 
+          ...newStats[1], 
+          value: recentCaptions.length > 0 ? recentCaptions.join("\n") : "No recent activity"
+        };
+
+        // 2: 24H Voting Surge
+        newStats[2] = { 
+          ...newStats[2], 
+          value: `${votes24h.toLocaleString()} votes`,
+          up: votes24h > 0
+        };
+
+        // 3: Trending Now
+        newStats[3] = { 
+          ...newStats[3], 
+          value: trending ? `"${trending.content}"` : "None yet",
+          trend: trending ? `${trending.count} votes this week` : "0 votes this week",
+          neutral: true
+        };
+
+        // 4: Community-Approved Gems
+        newStats[4] = { ...newStats[4], value: highImpact };
+
+        // 5: Total Votes Cast This Past Week
+        newStats[5] = { 
+          ...newStats[5], 
           value: currentVotes.toLocaleString(), 
           trend: `${votesDiff >= 0 ? "+" : ""}${votesDiff}% vs 3-week avg`,
           up: votesDiff >= 0,
           chartData: [...votesData].reverse() // [week3, week2, current] for left-to-right chart
         };
 
-        // 5: Most Humorous AI Model
-        newStats[5] = { ...newStats[5], value: topModel };
+        // 6: Most Agreed Caption & Image
+        if (mostAgreedData) {
+          newStats[6] = { 
+            ...newStats[6], 
+            value: mostAgreedData.caption, 
+            imageUrl: mostAgreedData.imageUrl || undefined 
+          };
+        } else {
+          newStats[6] = { ...newStats[6], value: "No data available" };
+        }
+        
+        // 7: New Users (Past 3 Months)
+        newStats[7] = { ...newStats[7], value: newUsers, trend: "Community Growth", up: true };
+        
+        // 8: Most Favored Humor Flavor
+        newStats[8] = { ...newStats[8], value: mostFavored };
+        
+        // 9: Most Humorous AI Model
+        newStats[9] = { 
+          ...newStats[9], 
+          value: topModel.split(":")[0]?.trim() || topModel,
+          trend: topModel.includes("(") ? topModel.substring(topModel.indexOf("(")) : ""
+        };
         
         return newStats;
       });
@@ -270,7 +314,17 @@ export default function Home() {
                       {stat.value.split(":")[1]?.trim()}
                     </span>
                   </div>
-                ) : index === 4 ? (
+                ) : stat.isList ? (
+                  <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left', width: '100%' }}>
+                    <ul style={{ margin: 0, paddingLeft: '20px', listStyleType: 'disc', color: '#f0f0f0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {stat.value.split('\n').map((item, i) => (
+                        <li key={i} style={{ fontSize: '18px', fontWeight: 600, lineHeight: '1.4' }}>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : index === 3 ? ( // Total Votes Cast This Past Week (previously index 4)
                   <div style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <span className={styles.statValue} style={{ fontSize: '48px' }}>
                       {stat.value}
