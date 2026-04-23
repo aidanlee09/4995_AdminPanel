@@ -45,8 +45,6 @@ export default function LLMPromptChainsPage() {
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
-interface LLMPromptChain {
-...
   return (
     <div style={{ width: '100%' }}>
       <div className={styles.dashboardHeader}>
