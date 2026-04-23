@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import styles from "../page.module.css";
+import { useState, useEffect } from "react";
+import styles from "./admin-layout.module.css";
 
 const menuItems = [
-  { name: "Dashboard", path: "/" },
   { name: "Users", path: "/admin/users" },
   { name: "Images", path: "/admin/images" },
   { name: "Humor Flavors", path: "/admin/humor-flavors" },
@@ -29,60 +29,63 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Close sidebar when route changes
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [pathname]);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#000', color: '#fff' }}>
-      {/* Sidebar */}
-      <aside style={{ 
-        width: '250px', 
-        borderRight: '1px solid #222', 
-        padding: '20px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '10px',
-        position: 'sticky',
-        top: 0,
-        height: '100vh',
-        overflowY: 'auto'
-      }}>
-        <Link 
-          href="/" 
-          style={{ 
-            marginBottom: '20px', 
-            fontWeight: 'bold', 
-            fontSize: '18px', 
-            letterSpacing: '0.1em', 
-            textDecoration: 'none', 
-            color: '#fff',
-            display: 'block'
-          }}
+    <div className={styles.container}>
+      {/* Mobile Header */}
+      <header className={styles.mobileHeader}>
+        <Link href="/" className={styles.logo}>ADMIN PANEL</Link>
+        <button 
+          className={styles.hamburger}
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          aria-label="Toggle Menu"
         >
+          {isSidebarOpen ? "✕" : "☰"}
+        </button>
+      </header>
+
+      {/* Overlay */}
+      <div 
+        className={`${styles.overlay} ${isSidebarOpen ? styles.overlayVisible : ""}`}
+        onClick={() => setIsSidebarOpen(false)}
+      />
+
+      {/* Sidebar */}
+      <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.sidebarOpen : ""}`}>
+        <Link href="/" className={styles.logo}>
           ADMIN PANEL
         </Link>
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {menuItems.map((item) => (
-            <Link 
-              key={item.path} 
-              href={item.path}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '4px',
-                textDecoration: 'none',
-                color: pathname === item.path ? '#fff' : '#888',
-                backgroundColor: pathname === item.path ? '#111' : 'transparent',
-                fontSize: '13px',
-                fontWeight: pathname === item.path ? 700 : 400,
-                transition: 'all 0.2s'
-              }}
-            >
-              {item.name}
-            </Link>
-          ))}
+        
+        <Link href="/" className={styles.backButton}>
+          ← Back to Dashboard
+        </Link>
+
+        <div className={styles.divider} />
+
+        <nav className={styles.nav}>
+          {menuItems.map((item) => {
+            const isActive = pathname === item.path;
+            return (
+              <Link 
+                key={item.path} 
+                href={item.path}
+                className={`${styles.navLink} ${isActive ? styles.activeNavLink : styles.inactiveNavLink}`}
+              >
+                {item.name}
+              </Link>
+            );
+          })}
         </nav>
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+      <main className={styles.mainContent}>
         {children}
       </main>
     </div>

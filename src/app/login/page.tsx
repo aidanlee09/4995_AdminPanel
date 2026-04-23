@@ -30,15 +30,7 @@ function LoginForm() {
   return (
     <main className={styles.main} style={{ justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: '20px' }}>
       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <h1 style={{ 
-          fontSize: '48px', 
-          fontWeight: 800, 
-          letterSpacing: '-0.04em',
-          marginBottom: '12px',
-          background: 'linear-gradient(to right, #ffffff, #888888)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent'
-        }}>
+        <h1 className={styles.loginTitle}>
           Admin Panel
         </h1>
         <p style={{ color: '#888', fontSize: '16px', letterSpacing: '0.02em' }}>
@@ -49,7 +41,6 @@ function LoginForm() {
       <div className={styles.statCard} style={{ 
         maxWidth: '420px', 
         width: '100%', 
-        padding: '40px',
         display: 'flex',
         flexDirection: 'column',
         gap: '30px',

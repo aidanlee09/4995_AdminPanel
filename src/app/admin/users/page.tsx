@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import styles from "../../page.module.css";
+import tableStyles from "../components/GenericAdminTable.module.css";
 
 export default function UsersPage() {
   const [profiles, setProfiles] = useState<any[]>([]);
@@ -58,26 +59,28 @@ export default function UsersPage() {
 
   return (
     <div style={{ width: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px', width: '100%', justifyContent: 'space-between', marginBottom: '30px' }}>
-        <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 'bold' }}>User Profiles</h1>
+      <div className={styles.dashboardHeader}>
+        <div className={styles.header}>
+          <h1 className={styles.dashboardTitle}>User Profiles</h1>
+        </div>
         {!loading && (
-          <div style={{ color: '#888', fontSize: '14px', fontWeight: 700 }}>
+          <div style={{ color: '#888', fontSize: '14px', fontWeight: 700, whiteSpace: 'nowrap' }}>
             {totalCount} TOTAL PROFILES
           </div>
         )}
       </div>
 
-      <div className={styles.statCard} style={{ overflowX: 'auto', minHeight: 'auto' }}>
+      <div className={`${styles.statCard} ${tableStyles.tableContainer}`} style={{ minHeight: 'auto' }}>
         {loading ? (
           <p>Loading profiles...</p>
         ) : profiles.length === 0 ? (
           <p>No profiles found.</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <table className={tableStyles.table}>
             <thead>
-              <tr style={{ borderBottom: '1px solid #333' }}>
+              <tr>
                 {columns.map(col => (
-                  <th key={col} style={{ padding: '12px', textTransform: 'capitalize', fontSize: '12px', color: '#555' }}>
+                  <th key={col} className={tableStyles.th}>
                     {col.replace(/_/g, ' ')}
                   </th>
                 ))}
@@ -85,9 +88,9 @@ export default function UsersPage() {
             </thead>
             <tbody>
               {profiles.map((profile, i) => (
-                <tr key={profile.id || i} style={{ borderBottom: '1px solid #222' }}>
+                <tr key={profile.id || i}>
                   {columns.map(col => (
-                    <td key={col} style={{ padding: '12px', fontSize: '14px', color: col === 'id' ? '#fff' : '#888' }}>
+                    <td key={col} className={`${tableStyles.td} ${col === 'id' ? tableStyles.idTd : ''}`}>
                       {typeof profile[col] === 'boolean' ? (
                         profile[col] ? (
                           <span style={{ color: '#4ade80', backgroundColor: 'rgba(74, 222, 128, 0.1)', padding: '2px 8px', borderRadius: '4px', fontSize: '12px' }}>TRUE</span>
@@ -107,18 +110,11 @@ export default function UsersPage() {
       </div>
 
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '20px', padding: '10px' }}>
+        <div className={tableStyles.pagination}>
           <button 
             disabled={currentPage === 1}
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            style={{ 
-              padding: '6px 12px', 
-              backgroundColor: currentPage === 1 ? '#111' : 'transparent', 
-              color: currentPage === 1 ? '#444' : '#4ade80', 
-              border: '1px solid #333', 
-              borderRadius: '4px', 
-              cursor: currentPage === 1 ? 'not-allowed' : 'pointer' 
-            }}
+            className={`${tableStyles.pageButton} ${currentPage === 1 ? tableStyles.pageButtonDisabled : tableStyles.pageButtonEnabled}`}
           >
             Previous
           </button>
@@ -128,14 +124,7 @@ export default function UsersPage() {
           <button 
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            style={{ 
-              padding: '6px 12px', 
-              backgroundColor: currentPage === totalPages ? '#111' : 'transparent', 
-              color: currentPage === totalPages ? '#444' : '#4ade80', 
-              border: '1px solid #333', 
-              borderRadius: '4px', 
-              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' 
-            }}
+            className={`${tableStyles.pageButton} ${currentPage === totalPages ? tableStyles.pageButtonDisabled : tableStyles.pageButtonEnabled}`}
           >
             Next
           </button>

@@ -6,19 +6,23 @@ import { supabase } from "./supabase";
 export async function getTopSystemPrompt() {
   if (!supabase) return "Supabase not configured";
   try {
-    const { data: topLikes } = await supabase
-      .from("captions")
-      .select("llm_prompt_chain_id, like_count")
-      .not("llm_prompt_chain_id", "is", null)
-      .order("like_count", { ascending: false })
-      .limit(1);
+    const [topRes, bottomRes] = await Promise.all([
+      supabase
+        .from("captions")
+        .select("llm_prompt_chain_id, like_count")
+        .not("llm_prompt_chain_id", "is", null)
+        .order("like_count", { ascending: false })
+        .limit(1),
+      supabase
+        .from("captions")
+        .select("llm_prompt_chain_id, like_count")
+        .not("llm_prompt_chain_id", "is", null)
+        .order("like_count", { ascending: true })
+        .limit(1)
+    ]);
 
-    const { data: bottomLikes } = await supabase
-      .from("captions")
-      .select("llm_prompt_chain_id, like_count")
-      .not("llm_prompt_chain_id", "is", null)
-      .order("like_count", { ascending: true })
-      .limit(1);
+    const topLikes = topRes.data;
+    const bottomLikes = bottomRes.data;
 
     let targetChainId: string | null = null;
     let maxMagnitude = -1;
@@ -234,8 +238,13 @@ export async function getMostAgreedCaptionAndImage() {
 export async function getNewUsersLastThreeMonths() {
   if (!supabase) return "0";
   try {
-    const { data: captionData } = await supabase.from("captions").select("profile_id, created_datetime_utc");
-    const { data: voteData } = await supabase.from("caption_votes").select("profile_id, created_datetime_utc");
+    const [captionRes, voteRes] = await Promise.all([
+      supabase.from("captions").select("profile_id, created_datetime_utc"),
+      supabase.from("caption_votes").select("profile_id, created_datetime_utc")
+    ]);
+
+    const captionData = captionRes.data;
+    const voteData = voteRes.data;
 
     const firstSeen: Record<string, Date> = {};
     const processData = (items: any[] | null) => {
@@ -287,9 +296,11 @@ export async function getVotesPastThreeWeeks() {
       return count || 0;
     };
 
-    const currentWeek = await fetchRange(oneWeekAgo, now);
-    const week2 = await fetchRange(twoWeeksAgo, oneWeekAgo);
-    const week3 = await fetchRange(threeWeeksAgo, twoWeeksAgo);
+    const [currentWeek, week2, week3] = await Promise.all([
+      fetchRange(oneWeekAgo, now),
+      fetchRange(twoWeeksAgo, oneWeekAgo),
+      fetchRange(threeWeeksAgo, twoWeeksAgo)
+    ]);
 
     return [currentWeek, week2, week3];
   } catch (error) {
@@ -304,14 +315,13 @@ export async function getVotesPastThreeWeeks() {
 export async function getHighImpactCreations() {
   if (!supabase) return "0 / 0";
   try {
-    const { count: total } = await supabase
-      .from("captions")
-      .select("*", { count: "exact", head: true });
+    const [totalRes, positiveRes] = await Promise.all([
+      supabase.from("captions").select("*", { count: "exact", head: true }),
+      supabase.from("captions").select("*", { count: "exact", head: true }).gt("like_count", 0)
+    ]);
     
-    const { count: positive } = await supabase
-      .from("captions")
-      .select("*", { count: "exact", head: true })
-      .gt("like_count", 0);
+    const total = totalRes.count;
+    const positive = positiveRes.count;
     
     return `${positive?.toLocaleString()} / ${total?.toLocaleString()} captions`;
   } catch (error) {
@@ -326,21 +336,22 @@ export async function getHighImpactCreations() {
 export async function getTopPerformingModel() {
   if (!supabase) return "None";
   try {
-    // Get all captions with their chain IDs and like counts
-    const { data: captions } = await supabase
-      .from("captions")
-      .select("llm_prompt_chain_id, like_count")
-      .not("llm_prompt_chain_id", "is", null);
+    // Parallelize getting captions and model responses
+    const [captionsRes, responsesRes] = await Promise.all([
+      supabase
+        .from("captions")
+        .select("llm_prompt_chain_id, like_count")
+        .not("llm_prompt_chain_id", "is", null),
+      supabase
+        .from("llm_model_responses")
+        .select("llm_prompt_chain_id, llm_model_id")
+        .not("llm_prompt_chain_id", "is", null)
+    ]);
 
-    if (!captions || captions.length === 0) return "None";
+    const captions = captionsRes.data;
+    const responses = responsesRes.data;
 
-    // Get all model responses to map chain ID to model ID
-    const { data: responses } = await supabase
-      .from("llm_model_responses")
-      .select("llm_prompt_chain_id, llm_model_id")
-      .not("llm_prompt_chain_id", "is", null);
-
-    if (!responses || responses.length === 0) return "None";
+    if (!captions || captions.length === 0 || !responses || responses.length === 0) return "None";
 
     const chainToModel: Record<string, string> = {};
     responses.forEach(r => {

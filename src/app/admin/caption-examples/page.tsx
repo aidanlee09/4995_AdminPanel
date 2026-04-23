@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import styles from "../../page.module.css";
+import tableStyles from "../components/GenericAdminTable.module.css";
 
 interface CaptionExample {
   id: string;
@@ -107,65 +108,67 @@ export default function CaptionExamplesPage() {
   }
 
   return (
-    <div>
-      <div className={styles.header} style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 style={{ margin: 0 }}>Caption Examples</h1>
-          <p style={{ color: '#888', marginTop: '4px' }}>Reference examples for the humor generation system.</p>
+    <div style={{ width: '100%' }}>
+      <div className={styles.dashboardHeader}>
+        <div className={styles.header}>
+          <h1 className={styles.dashboardTitle}>Caption Examples</h1>
+          <p className={styles.dashboardSubtitle}>Reference examples for the humor generation system.</p>
         </div>
         <button 
           onClick={() => { setIsAdding(true); setEditingExample(null); setFormData({ image_description: "", caption: "", explanation: "", priority: 0, image_id: "" }); }}
-          style={{ padding: '10px 20px', backgroundColor: '#4ade80', color: '#000', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
+          style={{ padding: '10px 20px', backgroundColor: '#4ade80', color: '#000', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', whiteSpace: 'nowrap' }}
         >
           + Add Example
         </button>
       </div>
 
       {(isAdding || editingExample) && (
-        <div className={styles.statCard} style={{ marginBottom: '20px', border: '1px solid #4ade80' }}>
+        <div className={styles.statCard} style={{ marginBottom: '20px', border: '1px solid #4ade80', minHeight: 'auto' }}>
           <h2>{isAdding ? "Add New Example" : "Edit Example"}</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '15px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', gridColumn: 'span 2' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '15px', marginTop: '15px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               <label style={{ fontSize: '12px', color: '#888' }}>Image Description</label>
               <textarea 
                 value={formData.image_description}
                 onChange={(e) => setFormData({ ...formData, image_description: e.target.value })}
-                style={{ padding: '10px', backgroundColor: '#111', border: '1px solid #333', color: '#fff', borderRadius: '4px', minHeight: '60px' }}
+                style={{ padding: '10px', backgroundColor: '#111', border: '1px solid #333', color: '#fff', borderRadius: '4px', minHeight: '80px' }}
               />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', gridColumn: 'span 2' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               <label style={{ fontSize: '12px', color: '#888' }}>Caption</label>
               <textarea 
                 value={formData.caption}
                 onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
-                style={{ padding: '10px', backgroundColor: '#111', border: '1px solid #333', color: '#fff', borderRadius: '4px', minHeight: '60px' }}
+                style={{ padding: '10px', backgroundColor: '#111', border: '1px solid #333', color: '#fff', borderRadius: '4px', minHeight: '80px' }}
               />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', gridColumn: 'span 2' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               <label style={{ fontSize: '12px', color: '#888' }}>Explanation</label>
               <textarea 
                 value={formData.explanation}
                 onChange={(e) => setFormData({ ...formData, explanation: e.target.value })}
-                style={{ padding: '10px', backgroundColor: '#111', border: '1px solid #333', color: '#fff', borderRadius: '4px', minHeight: '60px' }}
+                style={{ padding: '10px', backgroundColor: '#111', border: '1px solid #333', color: '#fff', borderRadius: '4px', minHeight: '80px' }}
               />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label style={{ fontSize: '12px', color: '#888' }}>Priority</label>
-              <input 
-                type="number" 
-                value={formData.priority}
-                onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })}
-                style={{ padding: '10px', backgroundColor: '#111', border: '1px solid #333', color: '#fff', borderRadius: '4px' }}
-              />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label style={{ fontSize: '12px', color: '#888' }}>Image ID (Optional)</label>
-              <input 
-                type="text" 
-                value={formData.image_id}
-                onChange={(e) => setFormData({ ...formData, image_id: e.target.value })}
-                style={{ padding: '10px', backgroundColor: '#111', border: '1px solid #333', color: '#fff', borderRadius: '4px' }}
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <label style={{ fontSize: '12px', color: '#888' }}>Priority</label>
+                <input 
+                  type="number" 
+                  value={formData.priority}
+                  onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })}
+                  style={{ padding: '10px', backgroundColor: '#111', border: '1px solid #333', color: '#fff', borderRadius: '4px' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <label style={{ fontSize: '12px', color: '#888' }}>Image ID (Optional)</label>
+                <input 
+                  type="text" 
+                  value={formData.image_id}
+                  onChange={(e) => setFormData({ ...formData, image_id: e.target.value })}
+                  style={{ padding: '10px', backgroundColor: '#111', border: '1px solid #333', color: '#fff', borderRadius: '4px' }}
+                />
+              </div>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
@@ -185,67 +188,58 @@ export default function CaptionExamplesPage() {
         </div>
       )}
 
-      <div className={styles.statCard}>
+      <div className={`${styles.statCard} ${tableStyles.tableContainer}`} style={{ minHeight: 'auto' }}>
         {loading ? (
           <p>Loading examples...</p>
         ) : examples.length === 0 ? (
           <p>No examples found.</p>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid #333' }}>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>EXAMPLE</th>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>PRIORITY</th>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>ACTIONS</th>
+          <table className={tableStyles.table}>
+            <thead>
+              <tr>
+                <th className={tableStyles.th}>EXAMPLE</th>
+                <th className={tableStyles.th}>PRIORITY</th>
+                <th className={tableStyles.th}>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {examples.map((example) => (
+                <tr key={example.id}>
+                  <td className={tableStyles.td}>
+                    <div style={{ fontWeight: 'bold', color: '#4ade80', marginBottom: '4px' }}>{example.caption}</div>
+                    <div style={{ fontSize: '12px', color: '#fff', marginBottom: '4px' }}>Desc: {example.image_description}</div>
+                    <div style={{ fontSize: '11px', color: '#888' }}>Exp: {example.explanation}</div>
+                  </td>
+                  <td className={tableStyles.td} style={{ fontSize: '14px' }}>{example.priority}</td>
+                  <td className={tableStyles.td}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button 
+                        onClick={() => { setEditingExample(example); setFormData(example); setIsAdding(false); }}
+                        style={{ padding: '4px 8px', backgroundColor: 'transparent', border: '1px solid #333', color: '#4ade80', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(example.id)}
+                        style={{ padding: '4px 8px', backgroundColor: 'transparent', border: '1px solid #333', color: '#ef4444', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {examples.map((example) => (
-                  <tr key={example.id} style={{ borderBottom: '1px solid #222' }}>
-                    <td style={{ padding: '12px' }}>
-                      <div style={{ fontWeight: 'bold', color: '#4ade80', marginBottom: '4px' }}>{example.caption}</div>
-                      <div style={{ fontSize: '12px', color: '#fff', marginBottom: '4px' }}>Desc: {example.image_description}</div>
-                      <div style={{ fontSize: '11px', color: '#888' }}>Exp: {example.explanation}</div>
-                    </td>
-                    <td style={{ padding: '12px', fontSize: '14px' }}>{example.priority}</td>
-                    <td style={{ padding: '12px' }}>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button 
-                          onClick={() => { setEditingExample(example); setFormData(example); setIsAdding(false); }}
-                          style={{ padding: '4px 8px', backgroundColor: 'transparent', border: '1px solid #333', color: '#4ade80', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}
-                        >
-                          Edit
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(example.id)}
-                          style={{ padding: '4px 8px', backgroundColor: 'transparent', border: '1px solid #333', color: '#ef4444', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
 
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '20px', padding: '10px' }}>
+        <div className={tableStyles.pagination}>
           <button 
             disabled={currentPage === 1}
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            style={{ 
-              padding: '6px 12px', 
-              backgroundColor: currentPage === 1 ? '#111' : 'transparent', 
-              color: currentPage === 1 ? '#444' : '#4ade80', 
-              border: '1px solid #333', 
-              borderRadius: '4px', 
-              cursor: currentPage === 1 ? 'not-allowed' : 'pointer' 
-            }}
+            className={`${tableStyles.pageButton} ${currentPage === 1 ? tableStyles.pageButtonDisabled : tableStyles.pageButtonEnabled}`}
           >
             Previous
           </button>
@@ -255,14 +249,7 @@ export default function CaptionExamplesPage() {
           <button 
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            style={{ 
-              padding: '6px 12px', 
-              backgroundColor: currentPage === totalPages ? '#111' : 'transparent', 
-              color: currentPage === totalPages ? '#444' : '#4ade80', 
-              border: '1px solid #333', 
-              borderRadius: '4px', 
-              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' 
-            }}
+            className={`${tableStyles.pageButton} ${currentPage === totalPages ? tableStyles.pageButtonDisabled : tableStyles.pageButtonEnabled}`}
           >
             Next
           </button>

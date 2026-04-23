@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import styles from "../../page.module.css";
+import tableStyles from "./GenericAdminTable.module.css";
 
 interface GenericAdminTableProps {
   tableName: string;
@@ -165,12 +166,12 @@ export default function GenericAdminTable({
 
   return (
     <div style={{ width: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-        <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 'bold' }}>{title}</h1>
+      <div className={tableStyles.tableHeader}>
+        <h1 className={tableStyles.title}>{title}</h1>
         {!isReadOnly && (
           <button 
             onClick={() => { setIsAdding(true); setEditingItem(null); setNewItem({}); }}
-            style={{ padding: '8px 16px', backgroundColor: '#4ade80', color: '#000', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
+            className={tableStyles.addButton}
           >
             + Add New
           </button>
@@ -180,28 +181,28 @@ export default function GenericAdminTable({
       {(isAdding || editingItem) && !isReadOnly && (
         <div className={styles.statCard} style={{ marginBottom: '30px' }}>
           <h2>{isAdding ? `Add to ${title}` : `Edit ${title}`}</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px' }}>
+          <div className={tableStyles.formGrid}>
             {editableColumns.map(col => (
-              <div key={col} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                <label style={{ fontSize: '12px', color: '#888', textTransform: 'uppercase' }}>{col.replace(/_/g, ' ')}</label>
+              <div key={col} className={tableStyles.formField}>
+                <label className={tableStyles.formLabel}>{col.replace(/_/g, ' ')}</label>
                 <input 
                   type="text" 
                   value={newItem[col] || ''}
                   onChange={(e) => handleInputChange(col, e.target.value)}
-                  style={{ padding: '10px', backgroundColor: '#111', border: '1px solid #333', color: '#fff', borderRadius: '4px' }}
+                  className={tableStyles.input}
                 />
               </div>
             ))}
-            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+            <div className={tableStyles.buttonGroup}>
               <button 
                 onClick={isAdding ? handleAdd : handleUpdate}
-                style={{ padding: '10px 20px', backgroundColor: '#4ade80', color: '#000', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
+                className={tableStyles.saveButton}
               >
                 {isAdding ? "Save" : "Update"}
               </button>
               <button 
                 onClick={() => { setIsAdding(false); setEditingItem(null); setNewItem({}); }}
-                style={{ padding: '10px 20px', backgroundColor: 'transparent', color: '#888', border: '1px solid #333', borderRadius: '4px', cursor: 'pointer' }}
+                className={tableStyles.cancelButton}
               >
                 Cancel
               </button>
@@ -210,28 +211,28 @@ export default function GenericAdminTable({
         </div>
       )}
 
-      <div className={styles.statCard} style={{ overflowX: 'auto', minHeight: 'auto' }}>
+      <div className={`${styles.statCard} ${tableStyles.tableContainer}`} style={{ minHeight: 'auto' }}>
         {loading ? (
           <p>Loading {title.toLowerCase()}...</p>
         ) : data.length === 0 ? (
           <p>No data found in {tableName}.</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <table className={tableStyles.table}>
             <thead>
-              <tr style={{ borderBottom: '1px solid #333' }}>
+              <tr>
                 {columns.map(col => (
-                  <th key={col} style={{ padding: '12px', textTransform: 'capitalize', fontSize: '12px', color: '#555' }}>
+                  <th key={col} className={tableStyles.th}>
                     {col.replace(/_/g, ' ')}
                   </th>
                 ))}
-                {!isReadOnly && <th style={{ padding: '12px', textTransform: 'capitalize', fontSize: '12px', color: '#555' }}>Actions</th>}
+                {!isReadOnly && <th className={tableStyles.th}>Actions</th>}
               </tr>
             </thead>
             <tbody>
               {data.map((item, i) => (
-                <tr key={item[idColumn] || i} style={{ borderBottom: '1px solid #222' }}>
+                <tr key={item[idColumn] || i}>
                   {columns.map(col => (
-                    <td key={col} style={{ padding: '12px', fontSize: '14px', color: col === idColumn ? '#fff' : '#888', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td key={col} className={`${tableStyles.td} ${col === idColumn ? tableStyles.idTd : ''}`}>
                       {typeof item[col] === 'boolean' ? (
                         item[col] ? (
                           <span style={{ color: '#4ade80', backgroundColor: 'rgba(74, 222, 128, 0.1)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>TRUE</span>
@@ -244,17 +245,17 @@ export default function GenericAdminTable({
                     </td>
                   ))}
                   {!isReadOnly && (
-                    <td style={{ padding: '12px' }}>
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                    <td className={tableStyles.actionTd}>
+                      <div className={tableStyles.actionButtons}>
                         <button 
                           onClick={() => { setEditingItem(item); setNewItem(item); setIsAdding(false); }}
-                          style={{ padding: '4px 8px', backgroundColor: 'transparent', border: '1px solid #333', color: '#888', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}
+                          className={tableStyles.editButton}
                         >
                           Edit
                         </button>
                         <button 
                           onClick={() => handleDelete(item[idColumn])}
-                          style={{ padding: '4px 8px', backgroundColor: 'transparent', border: '1px solid #333', color: '#ef4444', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}
+                          className={tableStyles.deleteButton}
                         >
                           Delete
                         </button>
@@ -269,18 +270,11 @@ export default function GenericAdminTable({
       </div>
 
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '20px', padding: '10px' }}>
+        <div className={tableStyles.pagination}>
           <button 
             disabled={currentPage === 1}
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            style={{ 
-              padding: '6px 12px', 
-              backgroundColor: currentPage === 1 ? '#111' : 'transparent', 
-              color: currentPage === 1 ? '#444' : '#4ade80', 
-              border: '1px solid #333', 
-              borderRadius: '4px', 
-              cursor: currentPage === 1 ? 'not-allowed' : 'pointer' 
-            }}
+            className={`${tableStyles.pageButton} ${currentPage === 1 ? tableStyles.pageButtonDisabled : tableStyles.pageButtonEnabled}`}
           >
             Previous
           </button>
@@ -290,14 +284,7 @@ export default function GenericAdminTable({
           <button 
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            style={{ 
-              padding: '6px 12px', 
-              backgroundColor: currentPage === totalPages ? '#111' : 'transparent', 
-              color: currentPage === totalPages ? '#444' : '#4ade80', 
-              border: '1px solid #333', 
-              borderRadius: '4px', 
-              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' 
-            }}
+            className={`${tableStyles.pageButton} ${currentPage === totalPages ? tableStyles.pageButtonDisabled : tableStyles.pageButtonEnabled}`}
           >
             Next
           </button>

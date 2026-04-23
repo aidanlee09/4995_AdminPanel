@@ -46,92 +46,84 @@ export default function Home() {
   ]);
 
   useEffect(() => {
-    async function loadStats() {
-      const highImpact = await getHighImpactCreations();
-      const topModel = await getTopPerformingModel();
-      const mostFavored = await getMostFavoredHumorFlavor();
-      const mostAgreedData = await getMostAgreedCaptionAndImage();
-      const newUsers = await getNewUsersLastThreeMonths();
-      const votesData = await getVotesPastThreeWeeks(); // [current, week2, week3]
-      const recentCaptions = await getRecentlyRatedCaptions();
-      const trending = await getTrendingCaption();
-      const votes24h = await getVotesLast24Hours();
-      const top3 = await getTop3Captions();
-      
-      const currentVotes = votesData[0];
-      const prevWeeksAvg = (votesData[1] + votesData[2]) / 2;
-      const votesDiff = prevWeeksAvg === 0 ? (currentVotes > 0 ? 100 : 0) : Math.round(((currentVotes - prevWeeksAvg) / prevWeeksAvg) * 100);
-
-      setStats(prev => {
-        const newStats = [...prev];
-        
-        // 0: Top Rated All-Time
-        newStats[0] = { 
-          ...newStats[0], 
-          value: top3.length > 0 ? top3.map(c => `${c.content} (${c.like_count} likes)`).join("\n") : "No ratings yet"
-        };
-
-        // 1: Captions Users Are Rating
-        newStats[1] = { 
-          ...newStats[1], 
-          value: recentCaptions.length > 0 ? recentCaptions.join("\n") : "No recent activity"
-        };
-
-        // 2: 24H Voting Surge
-        newStats[2] = { 
-          ...newStats[2], 
-          value: `${votes24h.toLocaleString()} votes`,
-          up: votes24h > 0
-        };
-
-        // 3: Trending Now
-        newStats[3] = { 
-          ...newStats[3], 
-          value: trending ? `"${trending.content}"` : "None yet",
-          trend: trending ? `${trending.count} votes this week` : "0 votes this week",
-          neutral: true
-        };
-
-        // 4: Community-Approved Gems
-        newStats[4] = { ...newStats[4], value: highImpact };
-
-        // 5: Total Votes Cast This Past Week
-        newStats[5] = { 
-          ...newStats[5], 
-          value: currentVotes.toLocaleString(), 
-          trend: `${votesDiff >= 0 ? "+" : ""}${votesDiff}% vs 3-week avg`,
-          up: votesDiff >= 0,
-          chartData: [...votesData].reverse() // [week3, week2, current] for left-to-right chart
-        };
-
-        // 6: Most Agreed Caption & Image
-        if (mostAgreedData) {
-          newStats[6] = { 
-            ...newStats[6], 
-            value: mostAgreedData.caption, 
-            imageUrl: mostAgreedData.imageUrl || undefined 
-          };
-        } else {
-          newStats[6] = { ...newStats[6], value: "No data available" };
-        }
-        
-        // 7: New Users (Past 3 Months)
-        newStats[7] = { ...newStats[7], value: newUsers, trend: "Community Growth", up: true };
-        
-        // 8: Most Favored Humor Flavor
-        newStats[8] = { ...newStats[8], value: mostFavored };
-        
-        // 9: Most Humorous AI Model
-        newStats[9] = { 
-          ...newStats[9], 
-          value: topModel.split(":")[0]?.trim() || topModel,
-          trend: topModel.includes("(") ? topModel.substring(topModel.indexOf("(")) : ""
-        };
-        
-        return newStats;
-      });
+    async function loadStat(index: number, fetchFn: () => Promise<any>, processor: (data: any) => Partial<Stat>) {
+      try {
+        const data = await fetchFn();
+        setStats(prev => {
+          const newStats = [...prev];
+          newStats[index] = { ...newStats[index], ...processor(data) };
+          return newStats;
+        });
+      } catch (error) {
+        console.error(`Error loading stat ${index}:`, error);
+        setStats(prev => {
+          const newStats = [...prev];
+          newStats[index] = { ...newStats[index], value: "Error" };
+          return newStats;
+        });
+      }
     }
-    loadStats();
+
+    // 0: Top Rated All-Time
+    loadStat(0, getTop3Captions, (data) => ({
+      value: data.length > 0 ? data.map((c: any) => `${c.content} (${c.like_count} likes)`).join("\n") : "No ratings yet"
+    }));
+
+    // 1: Captions Users Are Rating
+    loadStat(1, getRecentlyRatedCaptions, (data) => ({
+      value: data.length > 0 ? data.join("\n") : "No recent activity"
+    }));
+
+    // 2: 24H Voting Surge
+    loadStat(2, getVotesLast24Hours, (data) => ({
+      value: `${data.toLocaleString()} votes`,
+      up: data > 0
+    }));
+
+    // 3: Trending Now
+    loadStat(3, getTrendingCaption, (data) => ({
+      value: data ? `"${data.content}"` : "None yet",
+      trend: data ? `${data.count} votes this week` : "0 votes this week",
+      neutral: true
+    }));
+
+    // 4: Community-Approved Gems
+    loadStat(4, getHighImpactCreations, (data) => ({ value: data }));
+
+    // 5: Total Votes Cast This Past Week
+    loadStat(5, getVotesPastThreeWeeks, (data) => {
+      const currentVotes = data[0];
+      const prevWeeksAvg = (data[1] + data[2]) / 2;
+      const votesDiff = prevWeeksAvg === 0 ? (currentVotes > 0 ? 100 : 0) : Math.round(((currentVotes - prevWeeksAvg) / prevWeeksAvg) * 100);
+      return {
+        value: currentVotes.toLocaleString(),
+        trend: `${votesDiff >= 0 ? "+" : ""}${votesDiff}% vs 3-week avg`,
+        up: votesDiff >= 0,
+        chartData: [...data].reverse()
+      };
+    });
+
+    // 6: Most Agreed Caption & Image
+    loadStat(6, getMostAgreedCaptionAndImage, (data) => ({
+      value: data ? data.caption : "No data available",
+      imageUrl: data?.imageUrl || undefined
+    }));
+
+    // 7: New Users (Past 3 Months)
+    loadStat(7, getNewUsersLastThreeMonths, (data) => ({
+      value: data,
+      trend: "Community Growth",
+      up: true
+    }));
+
+    // 8: Most Favored Humor Flavor
+    loadStat(8, getMostFavoredHumorFlavor, (data) => ({ value: data }));
+
+    // 9: Most Humorous AI Model
+    loadStat(9, getTopPerformingModel, (data) => ({
+      value: data.split(":")[0]?.trim() || data,
+      trend: data.includes("(") ? data.substring(data.indexOf("(")) : ""
+    }));
   }, []);
 
   const renderChart = (data: number[]) => {
@@ -250,12 +242,12 @@ export default function Home() {
             box-shadow: 0 4px 20px rgba(248, 113, 113, 0.4) !important;
           }
         `}</style>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', marginBottom: '20px' }}>
-          <div className={styles.header} style={{ gap: '8px' }}>
+        <div className={styles.dashboardHeader}>
+          <div className={styles.header}>
             <Link href="/" style={{ textDecoration: 'none' }}>
-              <h1 style={{ margin: 0 }}>Admin Panel</h1>
+              <h1 className={styles.dashboardTitle}>Admin Panel</h1>
             </Link>
-            <p style={{ margin: 0 }}>
+            <p className={styles.dashboardSubtitle}>
               Real-time analytics and community performance metrics.
             </p>
           </div>
@@ -267,7 +259,7 @@ export default function Home() {
           </button>
         </div>
 
-        <div style={{ marginBottom: '32px' }}>
+        <div className={styles.manageDomainContainer}>
           <Link href="/admin/users" className="manage-domain-btn">
             MANAGE DOMAIN MODEL
           </Link>
@@ -284,7 +276,7 @@ export default function Home() {
                   height: '100%'
                 } : {}}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div className={styles.statHeader}>
                   <span className={styles.statLabel}>{stat.label}</span>
                   {stat.chartData && renderChart(stat.chartData)}
                 </div>

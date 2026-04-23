@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import styles from "../../page.module.css";
+import tableStyles from "../components/GenericAdminTable.module.css";
 
 interface CaptionRequest {
   id: string;
@@ -55,73 +56,66 @@ export default function CaptionRequestsPage() {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
-    <div>
-      <div className={styles.header} style={{ marginBottom: '24px' }}>
-        <h1 style={{ margin: 0 }}>Caption Requests</h1>
-        <p style={{ color: '#888', marginTop: '4px' }}>Pending and historical requests for image captioning.</p>
+    <div style={{ width: '100%' }}>
+      <div className={styles.dashboardHeader}>
+        <div className={styles.header}>
+          <h1 className={styles.dashboardTitle}>Caption Requests</h1>
+          <p className={styles.dashboardSubtitle}>Pending and historical requests for image captioning.</p>
+        </div>
       </div>
 
-      <div className={styles.statCard}>
+      <div className={`${styles.statCard} ${tableStyles.tableContainer}`} style={{ minHeight: 'auto' }}>
         {loading ? (
           <p>Loading requests...</p>
         ) : requests.length === 0 ? (
           <p>No requests found.</p>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid #333' }}>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>ID</th>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>CREATED (UTC)</th>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>USER ID</th>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>IMAGE ID</th>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>IMAGE</th>
+          <table className={tableStyles.table}>
+            <thead>
+              <tr>
+                <th className={tableStyles.th}>ID</th>
+                <th className={tableStyles.th}>CREATED (UTC)</th>
+                <th className={tableStyles.th}>USER ID</th>
+                <th className={tableStyles.th}>IMAGE ID</th>
+                <th className={tableStyles.th}>IMAGE</th>
+              </tr>
+            </thead>
+            <tbody>
+              {requests.map((req) => (
+                <tr key={req.id}>
+                  <td className={`${tableStyles.td} ${tableStyles.idTd}`}>{req.id}</td>
+                  <td className={tableStyles.td}>
+                    {new Date(req.created_datetime_utc).toLocaleString()}
+                  </td>
+                  <td className={`${tableStyles.td} ${tableStyles.idTd}`}>{req.profile_id}</td>
+                  <td className={`${tableStyles.td} ${tableStyles.idTd}`}>{req.image_id}</td>
+                  <td className={tableStyles.td}>
+                    {req.images?.url ? (
+                      <div 
+                        onClick={() => setSelectedImage(req.images!.url)}
+                        style={{ width: '50px', height: '50px', borderRadius: '4px', overflow: 'hidden', cursor: 'zoom-in', border: '1px solid #333' }}
+                      >
+                        <img src={req.images.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    ) : (
+                      <div style={{ width: '50px', height: '50px', borderRadius: '4px', backgroundColor: '#111', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: '#444' }}>
+                        N/A
+                      </div>
+                    )}
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {requests.map((req) => (
-                  <tr key={req.id} style={{ borderBottom: '1px solid #222' }}>
-                    <td style={{ padding: '12px', fontSize: '11px', color: '#444', fontFamily: 'monospace' }}>{req.id}</td>
-                    <td style={{ padding: '12px', fontSize: '13px', color: '#fff' }}>
-                      {new Date(req.created_datetime_utc).toLocaleString()}
-                    </td>
-                    <td style={{ padding: '12px', fontSize: '11px', color: '#888', fontFamily: 'monospace' }}>{req.profile_id}</td>
-                    <td style={{ padding: '12px', fontSize: '11px', color: '#888', fontFamily: 'monospace' }}>{req.image_id}</td>
-                    <td style={{ padding: '12px' }}>
-                      {req.images?.url ? (
-                        <div 
-                          onClick={() => setSelectedImage(req.images!.url)}
-                          style={{ width: '50px', height: '50px', borderRadius: '4px', overflow: 'hidden', cursor: 'zoom-in', border: '1px solid #333' }}
-                        >
-                          <img src={req.images.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        </div>
-                      ) : (
-                        <div style={{ width: '50px', height: '50px', borderRadius: '4px', backgroundColor: '#111', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: '#444' }}>
-                          N/A
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
 
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '20px', padding: '10px' }}>
+        <div className={tableStyles.pagination}>
           <button 
             disabled={currentPage === 1}
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            style={{ 
-              padding: '6px 12px', 
-              backgroundColor: currentPage === 1 ? '#111' : 'transparent', 
-              color: currentPage === 1 ? '#444' : '#4ade80', 
-              border: '1px solid #333', 
-              borderRadius: '4px', 
-              cursor: currentPage === 1 ? 'not-allowed' : 'pointer' 
-            }}
+            className={`${tableStyles.pageButton} ${currentPage === 1 ? tableStyles.pageButtonDisabled : tableStyles.pageButtonEnabled}`}
           >
             Previous
           </button>
@@ -131,14 +125,7 @@ export default function CaptionRequestsPage() {
           <button 
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            style={{ 
-              padding: '6px 12px', 
-              backgroundColor: currentPage === totalPages ? '#111' : 'transparent', 
-              color: currentPage === totalPages ? '#444' : '#4ade80', 
-              border: '1px solid #333', 
-              borderRadius: '4px', 
-              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' 
-            }}
+            className={`${tableStyles.pageButton} ${currentPage === totalPages ? tableStyles.pageButtonDisabled : tableStyles.pageButtonEnabled}`}
           >
             Next
           </button>

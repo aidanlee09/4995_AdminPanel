@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import styles from "../../page.module.css";
+import tableStyles from "../components/GenericAdminTable.module.css";
 
 interface Term {
   id: string;
@@ -118,15 +119,15 @@ export default function TermsPage() {
   }
 
   return (
-    <div>
-      <div className={styles.header} style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 style={{ margin: 0 }}>Terms</h1>
-          <p style={{ color: '#888', marginTop: '4px' }}>Glossary of terms used in humor generation.</p>
+    <div style={{ width: '100%' }}>
+      <div className={styles.dashboardHeader}>
+        <div className={styles.header}>
+          <h1 className={styles.dashboardTitle}>Terms</h1>
+          <p className={styles.dashboardSubtitle}>Glossary of terms used in humor generation.</p>
         </div>
         <button 
           onClick={() => { setIsAdding(true); setEditingTerm(null); setFormData({ term: "", definition: "", example: "", priority: 0, term_type_id: termTypes[0]?.id || "" }); }}
-          style={{ padding: '10px 20px', backgroundColor: '#4ade80', color: '#000', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
+          className={tableStyles.addButton}
         >
           + Add Term
         </button>
@@ -134,135 +135,130 @@ export default function TermsPage() {
 
       {(isAdding || editingTerm) && (
         <div className={styles.statCard} style={{ marginBottom: '20px', border: '1px solid #4ade80' }}>
-          <h2>{isAdding ? "Add New Term" : "Edit Term"}</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '15px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label style={{ fontSize: '12px', color: '#888' }}>Term</label>
-              <input 
-                type="text" 
-                value={formData.term}
-                onChange={(e) => setFormData({ ...formData, term: e.target.value })}
-                style={{ padding: '10px', backgroundColor: '#111', border: '1px solid #333', color: '#fff', borderRadius: '4px' }}
-              />
+          <h2 style={{ fontSize: '18px', marginBottom: '16px' }}>{isAdding ? "Add New Term" : "Edit Term"}</h2>
+          <div className={tableStyles.formGrid}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
+              <div className={tableStyles.formField}>
+                <label className={tableStyles.formLabel}>Term</label>
+                <input 
+                  type="text" 
+                  value={formData.term}
+                  onChange={(e) => setFormData({ ...formData, term: e.target.value })}
+                  className={tableStyles.input}
+                />
+              </div>
+              <div className={tableStyles.formField}>
+                <label className={tableStyles.formLabel}>Type</label>
+                <select 
+                  value={formData.term_type_id}
+                  onChange={(e) => setFormData({ ...formData, term_type_id: e.target.value })}
+                  className={tableStyles.input}
+                >
+                  <option value="">Select Type</option>
+                  {termTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+              </div>
+              <div className={tableStyles.formField} style={{ gridColumn: '1 / -1' }}>
+                <label className={tableStyles.formLabel}>Definition</label>
+                <textarea 
+                  value={formData.definition}
+                  onChange={(e) => setFormData({ ...formData, definition: e.target.value })}
+                  className={tableStyles.input}
+                  style={{ minHeight: '80px' }}
+                />
+              </div>
+              <div className={tableStyles.formField} style={{ gridColumn: '1 / -1' }}>
+                <label className={tableStyles.formLabel}>Example</label>
+                <textarea 
+                  value={formData.example}
+                  onChange={(e) => setFormData({ ...formData, example: e.target.value })}
+                  className={tableStyles.input}
+                  style={{ minHeight: '60px' }}
+                />
+              </div>
+              <div className={tableStyles.formField}>
+                <label className={tableStyles.formLabel}>Priority</label>
+                <input 
+                  type="number" 
+                  value={formData.priority}
+                  onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })}
+                  className={tableStyles.input}
+                />
+              </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label style={{ fontSize: '12px', color: '#888' }}>Type</label>
-              <select 
-                value={formData.term_type_id}
-                onChange={(e) => setFormData({ ...formData, term_type_id: e.target.value })}
-                style={{ padding: '10px', backgroundColor: '#111', border: '1px solid #333', color: '#fff', borderRadius: '4px' }}
+            <div className={tableStyles.buttonGroup}>
+              <button 
+                onClick={handleSubmit}
+                className={tableStyles.saveButton}
               >
-                <option value="">Select Type</option>
-                {termTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-              </select>
+                Save
+              </button>
+              <button 
+                onClick={() => { setIsAdding(false); setEditingTerm(null); }}
+                className={tableStyles.cancelButton}
+              >
+                Cancel
+              </button>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', gridColumn: 'span 2' }}>
-              <label style={{ fontSize: '12px', color: '#888' }}>Definition</label>
-              <textarea 
-                value={formData.definition}
-                onChange={(e) => setFormData({ ...formData, definition: e.target.value })}
-                style={{ padding: '10px', backgroundColor: '#111', border: '1px solid #333', color: '#fff', borderRadius: '4px', minHeight: '80px' }}
-              />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', gridColumn: 'span 2' }}>
-              <label style={{ fontSize: '12px', color: '#888' }}>Example</label>
-              <textarea 
-                value={formData.example}
-                onChange={(e) => setFormData({ ...formData, example: e.target.value })}
-                style={{ padding: '10px', backgroundColor: '#111', border: '1px solid #333', color: '#fff', borderRadius: '4px', minHeight: '60px' }}
-              />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label style={{ fontSize: '12px', color: '#888' }}>Priority</label>
-              <input 
-                type="number" 
-                value={formData.priority}
-                onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })}
-                style={{ padding: '10px', backgroundColor: '#111', border: '1px solid #333', color: '#fff', borderRadius: '4px' }}
-              />
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-            <button 
-              onClick={handleSubmit}
-              style={{ padding: '10px 20px', backgroundColor: '#4ade80', color: '#000', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
-            >
-              Save
-            </button>
-            <button 
-              onClick={() => { setIsAdding(false); setEditingTerm(null); }}
-              style={{ padding: '10px 20px', backgroundColor: 'transparent', color: '#888', border: '1px solid #333', borderRadius: '4px', cursor: 'pointer' }}
-            >
-              Cancel
-            </button>
           </div>
         </div>
       )}
 
-      <div className={styles.statCard}>
+      <div className={`${styles.statCard} ${tableStyles.tableContainer}`} style={{ minHeight: 'auto' }}>
         {loading ? (
           <p>Loading terms...</p>
         ) : terms.length === 0 ? (
           <p>No terms found.</p>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid #333' }}>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>TERM</th>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>TYPE</th>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>PRIORITY</th>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>ACTIONS</th>
+          <table className={tableStyles.table}>
+            <thead>
+              <tr>
+                <th className={tableStyles.th}>TERM</th>
+                <th className={tableStyles.th}>TYPE</th>
+                <th className={tableStyles.th}>PRIORITY</th>
+                <th className={tableStyles.th}>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {terms.map((term) => (
+                <tr key={term.id}>
+                  <td className={tableStyles.td}>
+                    <div style={{ fontWeight: 'bold', color: '#4ade80' }}>{term.term}</div>
+                    <div style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>{term.definition}</div>
+                  </td>
+                  <td className={tableStyles.td}>
+                    {termTypes.find(t => t.id === term.term_type_id)?.name || term.term_type_id}
+                  </td>
+                  <td className={tableStyles.td}>{term.priority}</td>
+                  <td className={tableStyles.actionTd}>
+                    <div className={tableStyles.actionButtons}>
+                      <button 
+                        onClick={() => { setEditingTerm(term); setFormData(term); setIsAdding(false); }}
+                        className={tableStyles.editButton}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(term.id)}
+                        className={tableStyles.deleteButton}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {terms.map((term) => (
-                  <tr key={term.id} style={{ borderBottom: '1px solid #222' }}>
-                    <td style={{ padding: '12px' }}>
-                      <div style={{ fontWeight: 'bold', color: '#4ade80' }}>{term.term}</div>
-                      <div style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>{term.definition}</div>
-                    </td>
-                    <td style={{ padding: '12px', fontSize: '13px' }}>
-                      {termTypes.find(t => t.id === term.term_type_id)?.name || term.term_type_id}
-                    </td>
-                    <td style={{ padding: '12px', fontSize: '14px' }}>{term.priority}</td>
-                    <td style={{ padding: '12px' }}>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button 
-                          onClick={() => { setEditingTerm(term); setFormData(term); setIsAdding(false); }}
-                          style={{ padding: '4px 8px', backgroundColor: 'transparent', border: '1px solid #333', color: '#4ade80', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}
-                        >
-                          Edit
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(term.id)}
-                          style={{ padding: '4px 8px', backgroundColor: 'transparent', border: '1px solid #333', color: '#ef4444', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
 
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '20px', padding: '10px' }}>
+        <div className={tableStyles.pagination}>
           <button 
             disabled={currentPage === 1}
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            style={{ 
-              padding: '6px 12px', 
-              backgroundColor: currentPage === 1 ? '#111' : 'transparent', 
-              color: currentPage === 1 ? '#444' : '#4ade80', 
-              border: '1px solid #333', 
-              borderRadius: '4px', 
-              cursor: currentPage === 1 ? 'not-allowed' : 'pointer' 
-            }}
+            className={`${tableStyles.pageButton} ${currentPage === 1 ? tableStyles.pageButtonDisabled : tableStyles.pageButtonEnabled}`}
           >
             Previous
           </button>
@@ -272,14 +268,7 @@ export default function TermsPage() {
           <button 
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            style={{ 
-              padding: '6px 12px', 
-              backgroundColor: currentPage === totalPages ? '#111' : 'transparent', 
-              color: currentPage === totalPages ? '#444' : '#4ade80', 
-              border: '1px solid #333', 
-              borderRadius: '4px', 
-              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' 
-            }}
+            className={`${tableStyles.pageButton} ${currentPage === totalPages ? tableStyles.pageButtonDisabled : tableStyles.pageButtonEnabled}`}
           >
             Next
           </button>

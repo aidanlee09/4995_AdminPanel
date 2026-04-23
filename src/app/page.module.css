@@ -17,6 +17,13 @@
   gap: 64px;
 }
 
+@media (max-width: 768px) {
+  .main {
+    padding: 40px 20px;
+    gap: 32px;
+  }
+}
+
 .header {
   display: flex;
   flex-direction: column;
@@ -34,6 +41,12 @@
   -webkit-text-fill-color: transparent;
 }
 
+@media (max-width: 768px) {
+  .header h1 {
+    font-size: 32px;
+  }
+}
+
 .header p {
   font-size: 18px;
   color: #888888;
@@ -42,11 +55,78 @@
   line-height: 1.6;
 }
 
+@media (max-width: 768px) {
+  .header p {
+    font-size: 16px;
+  }
+}
+
+.dashboardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  margin-bottom: 20px;
+  gap: 20px;
+}
+
+@media (max-width: 600px) {
+  .dashboardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.dashboardTitle {
+  margin: 0;
+}
+
+.dashboardSubtitle {
+  margin: 0;
+}
+
+.loginTitle {
+  font-size: 48px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin-bottom: 12px;
+  background: linear-gradient(to right, #ffffff, #888888);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@media (max-width: 600px) {
+  .loginTitle {
+    font-size: 32px;
+  }
+}
+
+.manageDomainContainer {
+  margin-bottom: 32px;
+}
+
+@media (max-width: 600px) {
+  .manageDomainContainer {
+    width: 100%;
+  }
+  
+  .manageDomainContainer a {
+    display: block;
+    text-align: center;
+  }
+}
+
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
   width: 100%;
   gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .statCard {
@@ -64,6 +144,14 @@
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
 }
 
+@media (max-width: 768px) {
+  .statCard {
+    padding: 20px;
+    border-radius: 16px;
+    min-height: auto;
+  }
+}
+
 .statCard:hover {
   transform: translateY(-4px);
   border-color: rgba(255, 255, 255, 0.2);
@@ -77,6 +165,22 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.12em;
+}
+
+.statHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .statHeader {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+  }
 }
 
 .statContent {

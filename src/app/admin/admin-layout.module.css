@@ -1,0 +1,158 @@
+.container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #000;
+  color: #fff;
+  flex-direction: row;
+}
+
+.sidebar {
+  width: 250px;
+  border-right: 1px solid #222;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  transition: transform 0.3s ease-in-out;
+  background-color: #000;
+  z-index: 100;
+}
+
+.logo {
+  margin-bottom: 20px;
+  font-weight: bold;
+  font-size: 18px;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  color: #fff;
+  display: block;
+}
+
+.backButton {
+  display: block;
+  padding: 10px 12px;
+  background-color: #111;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 10px;
+  transition: all 0.2s ease;
+}
+
+.backButton:hover {
+  background-color: #222;
+  border-color: #444;
+  transform: translateX(-2px);
+}
+
+.divider {
+  height: 1px;
+  background-color: #222;
+  margin: 10px 0;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.navLink {
+  padding: 8px 12px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.activeNavLink {
+  color: #fff;
+  background-color: #111;
+  font-weight: 700;
+}
+
+.inactiveNavLink {
+  color: #888;
+  font-weight: 400;
+}
+
+.inactiveNavLink:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.mainContent {
+  flex: 1;
+  padding: 40px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.mobileHeader {
+  display: none;
+  padding: 15px 20px;
+  border-bottom: 1px solid #222;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background-color: #000;
+  z-index: 101;
+}
+
+.hamburger {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: fixed;
+    left: 0;
+    transform: translateX(-100%);
+    width: 280px;
+    box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+  }
+
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+
+  .mainContent {
+    padding: 20px;
+  }
+
+  .mobileHeader {
+    display: flex;
+  }
+
+  .overlayVisible {
+    display: block;
+  }
+}

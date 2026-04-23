@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import styles from "../../page.module.css";
+import tableStyles from "../components/GenericAdminTable.module.css";
 
 interface Image {
   id: string;
@@ -186,12 +187,12 @@ export default function ImagesPage() {
           }
         }
       `}</style>
-      <div className={styles.header} style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 style={{ margin: 0 }}>Images</h1>
-          <p style={{ color: '#888', marginTop: '4px' }}>Upload and manage image assets for captioning.</p>
+      <div className={styles.dashboardHeader}>
+        <div className={styles.header}>
+          <h1 className={styles.dashboardTitle}>Images</h1>
+          <p className={styles.dashboardSubtitle}>Upload and manage image assets for captioning.</p>
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <label style={{ 
             padding: '10px 20px', 
             backgroundColor: '#111', 
@@ -200,7 +201,8 @@ export default function ImagesPage() {
             borderRadius: '4px', 
             fontWeight: 'bold', 
             cursor: uploading ? 'wait' : 'pointer',
-            fontSize: '14px'
+            fontSize: '14px',
+            whiteSpace: 'nowrap'
           }}>
             {uploading ? "Uploading..." : "Upload Image"}
             <input 
@@ -213,7 +215,7 @@ export default function ImagesPage() {
           </label>
           <button 
             onClick={() => { setIsAdding(true); setEditingImage(null); setNewUrl(""); }}
-            style={{ padding: '10px 20px', backgroundColor: '#4ade80', color: '#000', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+            style={{ padding: '10px 20px', backgroundColor: '#4ade80', color: '#000', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', whiteSpace: 'nowrap' }}
           >
             + Add URL
           </button>
@@ -286,18 +288,11 @@ export default function ImagesPage() {
       </div>
 
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '20px', padding: '10px' }}>
+        <div className={tableStyles.pagination}>
           <button 
             disabled={currentPage === 1}
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            style={{ 
-              padding: '6px 12px', 
-              backgroundColor: currentPage === 1 ? '#111' : 'transparent', 
-              color: currentPage === 1 ? '#444' : '#4ade80', 
-              border: '1px solid #333', 
-              borderRadius: '4px', 
-              cursor: currentPage === 1 ? 'not-allowed' : 'pointer' 
-            }}
+            className={`${tableStyles.pageButton} ${currentPage === 1 ? tableStyles.pageButtonDisabled : tableStyles.pageButtonEnabled}`}
           >
             Previous
           </button>
@@ -307,14 +302,7 @@ export default function ImagesPage() {
           <button 
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            style={{ 
-              padding: '6px 12px', 
-              backgroundColor: currentPage === totalPages ? '#111' : 'transparent', 
-              color: currentPage === totalPages ? '#444' : '#4ade80', 
-              border: '1px solid #333', 
-              borderRadius: '4px', 
-              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' 
-            }}
+            className={`${tableStyles.pageButton} ${currentPage === totalPages ? tableStyles.pageButtonDisabled : tableStyles.pageButtonEnabled}`}
           >
             Next
           </button>

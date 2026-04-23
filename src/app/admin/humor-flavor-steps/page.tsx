@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import styles from "../../page.module.css";
+import tableStyles from "../components/GenericAdminTable.module.css";
 
 interface HumorFlavorStep {
   id: string;
@@ -55,68 +56,61 @@ export default function HumorFlavorStepsPage() {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
-    <div>
-      <div className={styles.header} style={{ marginBottom: '24px' }}>
-        <h1 style={{ margin: 0 }}>Humor Flavor Steps</h1>
-        <p style={{ color: '#888', marginTop: '4px' }}>Logical steps for the humor generation process.</p>
+    <div style={{ width: '100%' }}>
+      <div className={styles.dashboardHeader}>
+        <div className={styles.header}>
+          <h1 className={styles.dashboardTitle}>Humor Flavor Steps</h1>
+          <p className={styles.dashboardSubtitle}>Logical steps for the humor generation process.</p>
+        </div>
       </div>
 
-      <div className={styles.statCard}>
+      <div className={`${styles.statCard} ${tableStyles.tableContainer}`} style={{ minHeight: 'auto' }}>
         {loading ? (
           <p>Loading flavor steps...</p>
         ) : steps.length === 0 ? (
           <p>No flavor steps found.</p>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid #333' }}>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px', textTransform: 'uppercase' }}>Order</th>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px', textTransform: 'uppercase' }}>Description</th>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px', textTransform: 'uppercase' }}>Temp</th>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px', textTransform: 'uppercase' }}>Flavor ID</th>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px', textTransform: 'uppercase' }}>System Prompt</th>
+          <table className={tableStyles.table}>
+            <thead>
+              <tr>
+                <th className={tableStyles.th}>Order</th>
+                <th className={tableStyles.th}>Description</th>
+                <th className={tableStyles.th}>Temp</th>
+                <th className={tableStyles.th}>Flavor ID</th>
+                <th className={tableStyles.th}>System Prompt</th>
+              </tr>
+            </thead>
+            <tbody>
+              {steps.map((step) => (
+                <tr key={step.id}>
+                  <td className={tableStyles.td} style={{ fontWeight: 'bold', color: '#4ade80' }}>
+                    {step.order_by}
+                  </td>
+                  <td className={tableStyles.td}>
+                    {step.description}
+                  </td>
+                  <td className={tableStyles.td}>
+                    {step.llm_temperature}
+                  </td>
+                  <td className={`${tableStyles.td} ${tableStyles.idTd}`}>
+                    {step.humor_flavor_id}
+                  </td>
+                  <td className={tableStyles.td} style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {step.llm_system_prompt}
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {steps.map((step) => (
-                  <tr key={step.id} style={{ borderBottom: '1px solid #222' }}>
-                    <td style={{ padding: '12px', fontSize: '14px', fontWeight: 'bold', color: '#4ade80' }}>
-                      {step.order_by}
-                    </td>
-                    <td style={{ padding: '12px', fontSize: '14px', color: '#fff' }}>
-                      {step.description}
-                    </td>
-                    <td style={{ padding: '12px', fontSize: '14px', color: '#fff' }}>
-                      {step.llm_temperature}
-                    </td>
-                    <td style={{ padding: '12px', fontSize: '11px', color: '#444', fontFamily: 'monospace' }}>
-                      {step.humor_flavor_id}
-                    </td>
-                    <td style={{ padding: '12px', fontSize: '12px', color: '#888', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {step.llm_system_prompt}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
 
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '20px', padding: '10px' }}>
+        <div className={tableStyles.pagination}>
           <button 
             disabled={currentPage === 1}
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            style={{ 
-              padding: '6px 12px', 
-              backgroundColor: currentPage === 1 ? '#111' : 'transparent', 
-              color: currentPage === 1 ? '#444' : '#4ade80', 
-              border: '1px solid #333', 
-              borderRadius: '4px', 
-              cursor: currentPage === 1 ? 'not-allowed' : 'pointer' 
-            }}
+            className={`${tableStyles.pageButton} ${currentPage === 1 ? tableStyles.pageButtonDisabled : tableStyles.pageButtonEnabled}`}
           >
             Previous
           </button>
@@ -126,14 +120,7 @@ export default function HumorFlavorStepsPage() {
           <button 
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            style={{ 
-              padding: '6px 12px', 
-              backgroundColor: currentPage === totalPages ? '#111' : 'transparent', 
-              color: currentPage === totalPages ? '#444' : '#4ade80', 
-              border: '1px solid #333', 
-              borderRadius: '4px', 
-              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' 
-            }}
+            className={`${tableStyles.pageButton} ${currentPage === totalPages ? tableStyles.pageButtonDisabled : tableStyles.pageButtonEnabled}`}
           >
             Next
           </button>

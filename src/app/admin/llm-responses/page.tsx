@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import styles from "../../page.module.css";
+import tableStyles from "../components/GenericAdminTable.module.css";
 
 interface LLMResponse {
   id: string;
@@ -56,10 +57,12 @@ export default function LLMResponsesPage() {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
-    <div>
-      <div className={styles.header} style={{ marginBottom: '24px' }}>
-        <h1 style={{ margin: 0 }}>LLM Responses</h1>
-        <p style={{ color: '#888', marginTop: '4px' }}>Raw output and metadata from model executions.</p>
+    <div style={{ width: '100%' }}>
+      <div className={styles.dashboardHeader}>
+        <div className={styles.header}>
+          <h1 className={styles.dashboardTitle}>LLM Responses</h1>
+          <p className={styles.dashboardSubtitle}>Raw output and metadata from model executions.</p>
+        </div>
       </div>
 
       {selectedResponse && (
@@ -76,17 +79,17 @@ export default function LLMResponsesPage() {
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 1000,
-            padding: '40px'
+            padding: '20px'
           }}
         >
           <div 
             onClick={(e) => e.stopPropagation()}
             style={{ 
               backgroundColor: '#111', 
-              padding: '30px', 
+              padding: '20px', 
               borderRadius: '8px', 
               maxWidth: '900px', 
-              width: '100%',
+              width: '95%',
               maxHeight: '90vh',
               overflowY: 'auto',
               border: '1px solid #333'
@@ -97,7 +100,7 @@ export default function LLMResponsesPage() {
               <button onClick={() => setSelectedResponse(null)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '24px' }}>&times;</button>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '15px', marginBottom: '20px' }}>
               <div style={{ fontSize: '12px', color: '#888' }}>
                 <span style={{ fontWeight: 'bold' }}>MODEL:</span> {selectedResponse.llm_model_id}
               </div>
@@ -142,59 +145,52 @@ export default function LLMResponsesPage() {
         </div>
       )}
 
-      <div className={styles.statCard}>
+      <div className={`${styles.statCard} ${tableStyles.tableContainer}`} style={{ minHeight: 'auto' }}>
         {loading ? (
           <p>Loading responses...</p>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid #333' }}>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>DATE</th>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>MODEL</th>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>TEMP</th>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>TIME</th>
-                  <th style={{ padding: '12px', color: '#888', fontWeight: 700, fontSize: '12px' }}>ACTIONS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {responses.map((res) => (
-                  <tr key={res.id} style={{ borderBottom: '1px solid #222' }}>
-                    <td style={{ padding: '12px', fontSize: '13px', color: '#fff' }}>
-                      {new Date(res.created_datetime_utc).toLocaleString()}
-                    </td>
-                    <td style={{ padding: '12px', fontSize: '11px', color: '#888', fontFamily: 'monospace' }}>{res.llm_model_id}</td>
-                    <td style={{ padding: '12px', fontSize: '13px', color: '#fff' }}>{res.llm_temperature}</td>
-                    <td style={{ padding: '12px', fontSize: '13px', color: '#fff' }}>{res.processing_time_seconds}s</td>
-                    <td style={{ padding: '12px' }}>
+          <table className={tableStyles.table}>
+            <thead>
+              <tr>
+                <th className={tableStyles.th}>DATE</th>
+                <th className={tableStyles.th}>MODEL</th>
+                <th className={tableStyles.th}>TEMP</th>
+                <th className={tableStyles.th}>TIME</th>
+                <th className={tableStyles.th}>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {responses.map((res) => (
+                <tr key={res.id}>
+                  <td className={tableStyles.td}>
+                    {new Date(res.created_datetime_utc).toLocaleString()}
+                  </td>
+                  <td className={`${tableStyles.td} ${tableStyles.idTd}`}>{res.llm_model_id}</td>
+                  <td className={tableStyles.td}>{res.llm_temperature}</td>
+                  <td className={tableStyles.td}>{res.processing_time_seconds}s</td>
+                  <td className={tableStyles.actionTd}>
+                    <div className={tableStyles.actionButtons}>
                       <button 
                         onClick={() => setSelectedResponse(res)}
-                        style={{ padding: '4px 8px', backgroundColor: 'transparent', border: '1px solid #333', color: '#4ade80', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}
+                        className={tableStyles.editButton}
                       >
                         View Details
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
 
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '20px', padding: '10px' }}>
+        <div className={tableStyles.pagination}>
           <button 
             disabled={currentPage === 1}
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            style={{ 
-              padding: '6px 12px', 
-              backgroundColor: currentPage === 1 ? '#111' : 'transparent', 
-              color: currentPage === 1 ? '#444' : '#4ade80', 
-              border: '1px solid #333', 
-              borderRadius: '4px', 
-              cursor: currentPage === 1 ? 'not-allowed' : 'pointer' 
-            }}
+            className={`${tableStyles.pageButton} ${currentPage === 1 ? tableStyles.pageButtonDisabled : tableStyles.pageButtonEnabled}`}
           >
             Previous
           </button>
@@ -204,14 +200,7 @@ export default function LLMResponsesPage() {
           <button 
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            style={{ 
-              padding: '6px 12px', 
-              backgroundColor: currentPage === totalPages ? '#111' : 'transparent', 
-              color: currentPage === totalPages ? '#444' : '#4ade80', 
-              border: '1px solid #333', 
-              borderRadius: '4px', 
-              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' 
-            }}
+            className={`${tableStyles.pageButton} ${currentPage === totalPages ? tableStyles.pageButtonDisabled : tableStyles.pageButtonEnabled}`}
           >
             Next
           </button>
